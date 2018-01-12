@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import urllib.request
 
-
 def JSONDictToDF(d):
 	'''
 	Converts a dictionary created from json.loads to a pandas dataframe
@@ -54,6 +53,7 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
 # Different cryptocurrency types
+# need to add TRX
 coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC']
 
 # Store data frames for each of above types
