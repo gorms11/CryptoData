@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import urllib.request
 
+#yo gorms
 
 def JSONDictToDF(d):
     '''
@@ -45,7 +46,6 @@ def GetCurDF(cur, fp):
     d = json.loads(x.replace("\'", "\""))
     df = JSONDictToDF(d)
     df.to_csv(fp, sep=',')
-    #print(df)
     return df
 
 # %%Path to store cached currency data
@@ -53,14 +53,10 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
     os.mkdir(datPath)
 # Different cryptocurrency types
-#cl = ['ETH', 'ADA']
 cl = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC']
-# Columns of price data to use
-CN = ['close', 'high', 'low', 'open', 'volume']
+
 # Store data frames for each of above types
 D = []
-
-
 for ci in cl:
     dfp = os.path.join(datPath, ci + '.csv')
     df = GetCurDF(ci, dfp)
