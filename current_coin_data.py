@@ -56,8 +56,8 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
     os.mkdir(datPath)
 # Different cryptocurrency types
-# need to add TRX
-coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC']
+
+coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX']
 
 # Store data frames for each of above types
 D = []
