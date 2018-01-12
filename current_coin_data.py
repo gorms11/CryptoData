@@ -1,4 +1,4 @@
-# TESTING PUSH AND COMMIT
+#Panadas is the only library not included by default: pip install pandas
 
 import json
 import os
@@ -54,13 +54,13 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
 # Different cryptocurrency types
-cl = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC']
+coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC']
 
 # Store data frames for each of above types
 D = []
-for ci in cl:
-	dfp = os.path.join(datPath, ci + '.csv')
-	df = GetCurDF(ci, dfp)
+for coin in coin_type:
+	dfp = os.path.join(datPath, coin + '.csv')
+	df = GetCurDF(coin, dfp)
 	D.append(df)
 
 print(D)
