@@ -1,3 +1,5 @@
+#TESTING PUSH AND COMMIT
+
 import json
 import os
 import pandas as pd
@@ -74,5 +76,6 @@ print(D)
 cr = min(Di.shape[0] for Di in D)
 for i in range(len(cl)):
     D[i] = D[i][(D[i].shape[0] - cr):]
+    
 '''
 
