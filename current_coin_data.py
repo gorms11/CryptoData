@@ -1,4 +1,4 @@
-# Pandas is the only library used not in standard lib: pip install pandas
+# Pandas is the only library not in standard lib: pip install pandas
 # Works on linux/windows
 import json
 import os
@@ -53,9 +53,7 @@ def GetCurDF(cur, fp):
 	dict_json_web_data = JSONDictToDF(modified_json_web_data)
 	dict_json_web_data.to_csv(fp, sep=',')
 	return json_web_data
-
-
-# return dict_json_web_data  # %%Path to store cached currency data
+    # return dict_json_web_data  # %%Path to store cached currency data
 
 
 # Below block is for GUI Ticker
@@ -84,6 +82,7 @@ coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX']
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
+
 '''
 D = []
 for coin in coin_type:
@@ -95,18 +94,17 @@ for coin in coin_type:
 
 print(D)
 '''
-# text += ' ' * 300
 
 while True:
-	D = []
+	list_of_coin_data = []
 	for coin in coin_type:
 		dfp = os.path.join(datPath, coin + '.csv')
 		text = GetCurDF(coin, dfp)
 		text = str(text['RAW'][coin]['USD']['PRICE'])
 		text = coin + ' :' + ' $' + text + '    '
-		D.append(text)
-	print(D)
-	display_text.set(' '.join(D))
+		list_of_coin_data.append(text)
+	#print(list_of_coin_data)
+	display_text.set(' '.join(list_of_coin_data))
 	#text = text[1:]+text[0]
 	master.lift()
 	master.focus()
