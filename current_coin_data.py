@@ -5,7 +5,7 @@ import urllib.request
 import datetime
 import tkinter as tk
 from time import sleep
-
+import platform
 
 def JSONDictToDF(d):
     '''
@@ -22,7 +22,6 @@ def JSONDictToDF(d):
             df.set_value(i, coli, d[i][coli])
     return df
 
-
 def GetAPIUrl(cur):
     '''
     Makes a URL for querying historical prices of a cyrpto from Poloniex
@@ -30,7 +29,6 @@ def GetAPIUrl(cur):
     '''
     url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + cur + '&tsyms=USD'
     return url
-
 
 def GetCurDF(cur, fp):
     '''
@@ -51,22 +49,23 @@ def GetCurDF(cur, fp):
     dict_json_web_data.to_csv(fp, sep=',')
     return dict_json_web_data  # %%Path to store cached currency data
 
-def shift(text):
-	sleep(1)
-	text = text[1:] + text[0]
-	display_text.set(text)
-	master.after(100,shift(text))
-
 #Below block is for GUI Ticker
 #display_text = variable for text
 #msg = label that holds text
 #master = main tkinter window
 master = tk.Tk()
-#master.wm_attributes('-type', 'splash','-topmost',1) uncomment for linux
 master.geometry('1920x20+0+0')
 
-master.wm_attributes('-topmost',1)
-master.overrideredirect(1) #comment out if using linux
+#if linux
+if platform.system() is 'Linux':
+    print("linux")
+    master.wm_attributes('-type', 'splash','-topmost',1)
+
+#if windows
+if platform.system() is 'Windows':
+    print('windows')
+    master.wm_attributes('-topmost',1)
+    master.overrideredirect(1)
 
 text = "hello fagget"
 display_text = tk.StringVar()
@@ -102,9 +101,7 @@ for coin in coin_type:
     dfp = os.path.join(datPath, coin + '.csv')
     df = GetCurDF(coin, dfp)
     D.append(df)
-
 print(D)
-
 
 '''
     try:
@@ -116,5 +113,4 @@ print(D)
 cr = min(Di.shape[0] for Di in D)
 for i in range(len(cl)):
     D[i] = D[i][(D[i].shape[0] - cr):]
-
 '''
