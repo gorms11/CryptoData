@@ -124,27 +124,34 @@ master.update()
 
 #records ethereum data in local SQL database
 def WriteToDB():
+	'''records data for each coin in its own table for local SQL database
+	   Still needs to check if table/database exists first before running'''
 	threading.Timer(300.0, WriteToDB).start()
 	print('writing to database!')
-	dbList = CoinList[2]
 	db = sqlite3.connect('CoinData.db')
 	c = db.cursor()
-	c.execute('''INSERT INTO Ethereum(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR,
-    										VOLUME24HOURTO, HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24HR,
-    										 TOTALVOLUME24HRTO, LASTUPDATE)
-    	              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-			  (str(dbList["RAW"]["ETH"]["USD"]["PRICE"]), str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUME"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUMETO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAY"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAYTO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOUR"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOURTO"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["HIGH24HOUR"]), str(dbList["RAW"]["ETH"]["USD"]["LOW24HOUR"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["MKTCAP"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["SUPPLY"]), str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24H"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24HTO"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["LASTUPDATE"])))
-	db.commit()
-	db.close()
-	print('done writing to database!')
+
+	for x in range(0, len(CoinList)):
+		dbList= CoinList[x]
+		c.execute('''INSERT INTO {tn}(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR, VOLUME24HOURTO,
+		                        HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24H, TOTALVOLUME24HTO, LASTUPDATE)
+		                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''.format(tn=coin_type[x]),
+				  (str(dbList["RAW"][coin_type[x]]["USD"]["PRICE"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["LASTVOLUME"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["LASTVOLUMETO"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["VOLUMEDAY"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["VOLUMEDAYTO"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["VOLUME24HOUR"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["VOLUME24HOURTO"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["HIGH24HOUR"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["LOW24HOUR"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["MKTCAP"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["SUPPLY"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["TOTALVOLUME24H"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["TOTALVOLUME24HTO"]),
+				   str(dbList["RAW"][coin_type[x]]["USD"]["LASTUPDATE"])))
+		db.commit()
+		print('wrote to ', [coin_type[x]] , ' database!')
 
 #Used by database thread and first iteration of while loop
 CoinList = DataGrabber_NoCSV()
