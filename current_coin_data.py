@@ -27,7 +27,6 @@ def JSONDictToDF(d):
 			df.set_value(i, coli, d[i][coli])
 	return df
 
-
 def GetAPIUrl(cur):
 	'''
 	Makes a URL for querying historical prices of a cyrpto from Poloniex
@@ -68,6 +67,48 @@ def GetCur_NoCSV(cur):
 	json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
 	return json_web_data
 
+#records ethereum data in local SQL database
+def WriteToDB():
+	threading.Timer(300.0, WriteToDB).start()
+	print('writing to database!')
+	dbList = CoinList[2]
+	db = sqlite3.connect('CoinData.db')
+	c = db.cursor()
+	c.execute('''INSERT INTO Ethereum(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR,
+    										VOLUME24HOURTO, HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24HR,
+    										 TOTALVOLUME24HRTO, LASTUPDATE)
+    	              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+			  (str(dbList["RAW"]["ETH"]["USD"]["PRICE"]), str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUME"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUMETO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAY"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAYTO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOUR"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOURTO"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["HIGH24HOUR"]), str(dbList["RAW"]["ETH"]["USD"]["LOW24HOUR"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["MKTCAP"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["SUPPLY"]), str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24H"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24HTO"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["LASTUPDATE"])))
+	db.commit()
+	db.close()
+	print('done writing to database!')
+
+#Grabs and returns all coin data from API AND makes .CSV files
+def DataGrabber():
+	list_of_coin_data = []
+	for coin in coin_type:
+		dfp = os.path.join(datPath, coin + '.csv')
+		text = GetCurDF(coin, dfp)
+		list_of_coin_data.append(text)
+	return(list_of_coin_data)
+
+#Grabs and returns all coin data from API WITHOUT making .CSV files. Used by GUI and SQL Database Logger
+def DataGrabber_NoCSV():
+	#print('DataGrabber_NoCVS function executed')
+	list_of_coin_data = []
+	for coin in coin_type:
+		text = GetCur_NoCSV(coin)
+		list_of_coin_data.append(text)
+	return (list_of_coin_data)
+
 
 # Below block is for GUI Ticker
 # display_text = variable for text
@@ -96,55 +137,11 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
 
-
-#Grabs and returns all coin data from API AND makes .CSV files
-def DataGrabber():
-	list_of_coin_data = []
-	for coin in coin_type:
-		dfp = os.path.join(datPath, coin + '.csv')
-		text = GetCurDF(coin, dfp)
-		list_of_coin_data.append(text)
-	return(list_of_coin_data)
-
-#Grabs and returns all coin data from API WITHOUT making .CSV files. Used by GUI and SQL Database Logger
-def DataGrabber_NoCSV():
-	#print('DataGrabber_NoCVS function executed')
-	list_of_coin_data = []
-	for coin in coin_type:
-		text = GetCur_NoCSV(coin)
-		list_of_coin_data.append(text)
-	return (list_of_coin_data)
-
-
 #provides something to display when program first starts
 display_text.set('grabbing data...please wait')
 master.lift()
 master.focus()
 master.update()
-
-#records ethereum data in local SQL database
-def WriteToDB():
-	threading.Timer(300.0, WriteToDB).start()
-	print('writing to database!')
-	dbList = CoinList[2]
-	db = sqlite3.connect('CoinData.db')
-	c = db.cursor()
-	c.execute('''INSERT INTO Ethereum(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR,
-    										VOLUME24HOURTO, HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24HR,
-    										 TOTALVOLUME24HRTO, LASTUPDATE)
-    	              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-			  (str(dbList["RAW"]["ETH"]["USD"]["PRICE"]), str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUME"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUMETO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAY"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAYTO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOUR"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOURTO"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["HIGH24HOUR"]), str(dbList["RAW"]["ETH"]["USD"]["LOW24HOUR"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["MKTCAP"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["SUPPLY"]), str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24H"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24HTO"]),
-			   str(dbList["RAW"]["ETH"]["USD"]["LASTUPDATE"])))
-	db.commit()
-	db.close()
-	print('done writing to database!')
 
 #Used by database thread and first iteration of while loop
 CoinList = DataGrabber_NoCSV()
@@ -165,31 +162,3 @@ while True:
 	master.update()
 	sleep(10)
 	CoinList = DataGrabber_NoCSV()
-
-
-'''
-datPath = 'CurDat/'
-if not os.path.exists(datPath):
-	os.mkdir(datPath)
-# Different cryptocurrency types
-
-coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX']
-
-# Store data frames for each of above types
-D = []
-for coin in coin_type:
-	dfp = os.path.join(datPath, coin + '.csv')
-	df = GetCurDF(coin, dfp)
-	D.append(df)
-print(D)
-
-	try:
-		df = pd.read_csv(dfp, sep=',')
-	except FileNotFoundError:
-		df = GetCurDF(ci, dfp)
-	D.append(df)
-# %%Only keep range of data that is common to all currency types
-cr = min(Di.shape[0] for Di in D)
-for i in range(len(cl)):
-	D[i] = D[i][(D[i].shape[0] - cr):]
-'''
