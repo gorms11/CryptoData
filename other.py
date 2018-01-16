@@ -61,7 +61,8 @@ for coin in coin_type:
     df = GetCurDF(coin, dfp)
     D.append(df)
 
-print(D)
+for x in range(0,len(D)):
+    print(D[x])
 '''
     try:
         df = pd.read_csv(dfp, sep=',')

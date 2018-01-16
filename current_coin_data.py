@@ -8,7 +8,9 @@ import datetime
 import tkinter as tk
 from time import sleep
 import platform
-
+import threading
+import sqlite3
+from sqlite3 import Error
 
 def JSONDictToDF(d):
 	'''
@@ -52,8 +54,19 @@ def GetCurDF(cur, fp):
 	modified_json_web_data = json.loads(string_json_web_data.replace("\'", "\""))
 	dict_json_web_data = JSONDictToDF(modified_json_web_data)
 	dict_json_web_data.to_csv(fp, sep=',')
-	return json_web_data
+	return dict_json_web_data
     # return dict_json_web_data  # %%Path to store cached currency data
+
+
+#returns API data without using Panda Dataframes or making .csv files
+def GetCur_NoCSV(cur):
+	openUrl = urllib.request.urlopen(GetAPIUrl(cur))
+	web_data = openUrl.read()
+	openUrl.close()
+	json_web_data = json.loads(web_data)
+	timestamp = str(datetime.datetime.fromtimestamp(json_web_data["RAW"][cur]["USD"]['LASTUPDATE']))
+	json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
+	return json_web_data
 
 
 # Below block is for GUI Ticker
@@ -83,33 +96,76 @@ datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
 
-'''
-D = []
-for coin in coin_type:
-	dfp = os.path.join(datPath, coin + '.csv')
-	text = GetCurDF(coin, dfp)
-	text = str(text['RAW'][coin]['USD']['PRICE'])
-	text = coin + ' :' + ' $' + text
-	D.append(text)
 
-print(D)
-'''
-
-while True:
+#Grabs and returns all coin data from API AND makes .CSV files
+def DataGrabber():
 	list_of_coin_data = []
 	for coin in coin_type:
 		dfp = os.path.join(datPath, coin + '.csv')
 		text = GetCurDF(coin, dfp)
-		text = str(text['RAW'][coin]['USD']['PRICE'])
-		text = coin + ' :' + ' $' + text + '    '
 		list_of_coin_data.append(text)
-	#print(list_of_coin_data)
-	display_text.set(' '.join(list_of_coin_data))
-	#text = text[1:]+text[0]
+	return(list_of_coin_data)
+
+#Grabs and returns all coin data from API WITHOUT making .CSV files. Used by GUI and SQL Database Logger
+def DataGrabber_NoCSV():
+	#print('DataGrabber_NoCVS function executed')
+	list_of_coin_data = []
+	for coin in coin_type:
+		text = GetCur_NoCSV(coin)
+		list_of_coin_data.append(text)
+	return (list_of_coin_data)
+
+
+#provides something to display when program first starts
+display_text.set('grabbing data...please wait')
+master.lift()
+master.focus()
+master.update()
+
+#records ethereum data in local SQL database
+def WriteToDB():
+	threading.Timer(300.0, WriteToDB).start()
+	print('writing to database!')
+	dbList = DataGrabber_NoCSV()[2]
+	db = sqlite3.connect('CoinData.db')
+	c = db.cursor()
+	c.execute('''INSERT INTO Ethereum(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR,
+    										VOLUME24HOURTO, HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24HR,
+    										 TOTALVOLUME24HRTO, LASTUPDATE)
+    	              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+			  (str(dbList["RAW"]["ETH"]["USD"]["PRICE"]), str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUME"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["LASTVOLUMETO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAY"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["VOLUMEDAYTO"]), str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOUR"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["VOLUME24HOURTO"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["HIGH24HOUR"]), str(dbList["RAW"]["ETH"]["USD"]["LOW24HOUR"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["MKTCAP"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["SUPPLY"]), str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24H"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["TOTALVOLUME24HTO"]),
+			   str(dbList["RAW"]["ETH"]["USD"]["LASTUPDATE"])))
+	db.commit()
+	db.close()
+	print('done writing to database!')
+
+#Used by database thread and first iteration of while loop
+CoinList = DataGrabber_NoCSV()
+WriteToDB()
+
+while True:
+	coin_fiat_data = []
+	for x in range(0, len(CoinList)):
+		text= CoinList[x]
+		text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
+		text = coin_type[x] + ' :' + ' $' + text + '    '
+		coin_fiat_data.append(text)
+	#print('display updated')
+	display_text.set(' '.join(coin_fiat_data))
+	# text = text[1:]+text[0]
 	master.lift()
 	master.focus()
-	#sleep(1)
 	master.update()
+	sleep(10)
+	CoinList = DataGrabber_NoCSV()
+
 
 '''
 datPath = 'CurDat/'
