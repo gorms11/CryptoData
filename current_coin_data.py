@@ -10,7 +10,6 @@ from time import sleep
 import platform
 import threading
 import sqlite3
-from sqlite3 import Error
 
 def JSONDictToDF(d):
 	'''
@@ -70,35 +69,6 @@ def GetCur_NoCSV(cur):
 	return json_web_data
 
 
-# Below block is for GUI Ticker
-# display_text = variable for text
-# msg = label that holds text
-# master = main tkinter window
-master = tk.Tk()
-master.geometry('1920x20+0+0')
-
-# if linux
-if platform.system() is 'Linux':
-	master.wm_attributes('-type', 'splash', '-topmost', 1)
-
-# if windows
-if platform.system() is 'Windows':
-	master.wm_attributes('-topmost', 1)
-	master.overrideredirect(1)
-
-display_text = tk.StringVar()
-msg = tk.Label(master, textvariable=display_text, height='20', width='1920', anchor='w')
-msg.config(bg='black', font=('times', 12), fg='white')
-msg.pack()
-master.lift()
-
-coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX']
-datPath = 'CurDat/'
-if not os.path.exists(datPath):
-	os.mkdir(datPath)
-
-
-
 def DataGrabber():
 	'''Grabs and returns all coin data from API AND makes .CSV files'''
 	list_of_coin_data = []
@@ -116,14 +86,6 @@ def DataGrabber_NoCSV():
 		text = GetCur_NoCSV(coin)
 		list_of_coin_data.append(text)
 	return (list_of_coin_data)
-
-
-#provides something to display when program first starts
-display_text.set('grabbing data...please wait')
-master.lift()
-master.focus()
-master.update()
-
 
 def WriteToDB():
 	'''records data for each coin in its own table for local SQL database
@@ -158,7 +120,43 @@ def WriteToDB():
 	db.close()
 	print('done writing to database!')
 
-#Used by database thread and first iteration of while loop
+
+# Below block is for GUI Ticker
+# display_text = variable for text
+# msg = label that holds text
+# master = main tkinter window
+master = tk.Tk()
+master.geometry('1920x20+0+0')
+
+# if linux
+if platform.system() is 'Linux':
+	master.wm_attributes('-type', 'splash', '-topmost', 1)
+
+# if windows
+if platform.system() is 'Windows':
+	master.wm_attributes('-topmost', 1)
+	master.overrideredirect(1)
+
+display_text = tk.StringVar()
+msg = tk.Label(master, textvariable=display_text, height='20', width='1920', anchor='w')
+msg.config(bg='black', font=('times', 12), fg='white')
+msg.pack()
+master.lift()
+
+coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
+datPath = 'CurDat/'
+if not os.path.exists(datPath):
+	os.mkdir(datPath)
+
+
+#provides something to display when program first starts
+display_text.set('grabbing data...please wait')
+master.lift()
+master.focus()
+master.update()
+
+
+#Used for first database write and first iteration of while loop
 CoinList = DataGrabber_NoCSV()
 WriteToDB()
 
