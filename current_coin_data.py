@@ -126,7 +126,7 @@ master.update()
 def WriteToDB():
 	threading.Timer(300.0, WriteToDB).start()
 	print('writing to database!')
-	dbList = DataGrabber_NoCSV()[2]
+	dbList = CoinList[2]
 	db = sqlite3.connect('CoinData.db')
 	c = db.cursor()
 	c.execute('''INSERT INTO Ethereum(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR,
