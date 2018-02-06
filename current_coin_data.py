@@ -83,9 +83,12 @@ def DataGrabber():
 
 
 def DataGrabber_NoCSV():
-	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds'''
+	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds
+	   Updates the string displayed in the user interface
+	   Stores current and previous values of all coins in 2D array for easy comparison'''
 	threading.Timer(18.0, DataGrabber_NoCSV).start()
 	global CoinList
+	global coin_data_copy
 	list_of_coin_data = []
 	for coin in coin_type:
 		text = GetCur_NoCSV(coin)
@@ -94,15 +97,24 @@ def DataGrabber_NoCSV():
 	CoinList = list_of_coin_data
 	#return (list_of_coin_data)
 
+	coin_fiat_data = []
+	for x in range(len(list_of_coin_data)):
+		text = list_of_coin_data[x]
+		text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
+		compare_list[x][1] = compare_list[x][0]
+		compare_list[x][0] = float(text)
+		text = coin_type[x] + ' :' + ' $' + text + '    '
+		coin_fiat_data.append(text)
+	coin_data_copy = coin_fiat_data
+	print(compare_list)
+
 
 def WriteToDB():
-	'''records data for each coin in its own table for local SQL database
-	   Still needs to check if table/database exists first before running'''
+	'''records data for each coin in its own table for local SQL database'''
 	threading.Timer(150.0, WriteToDB).start()
 	print('writing to database!')
 	db = sqlite3.connect('CoinData.db')
 	c = db.cursor()
-
 
 	for x in range(len(CoinList)):
 		dbList= CoinList[x]
@@ -185,31 +197,20 @@ master.lift()
 master.focus()
 master.update()
 
+#2D array for comparing current value to previous value for each coin
+compare_list = [[None for x in range(2)] for y in range(len(coin_type))]
+
 CoinList = []
-#Used for first database write and first iteration of while loop
+coin_data_copy = []
+
+#Initializes Datagrabber_NoCSV and WriteToDB threads
 DataGrabber_NoCSV()
 WriteToDB()
 
 
-#2D array for comparing current value to previous value for each coin
-compare_list = [[None for x in range(2)] for y in range(len(coin_type))]
-
-
-
-
 while True:
-	coin_fiat_data = []
-	for x in range(len(CoinList)):
-		text= CoinList[x]
-		text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
-		#compare_value = int(text)
-		compare_list[x][1] = compare_list[x][0]
-		compare_list[x][0] = float(text)
-		text = coin_type[x] + ' :' + ' $' + text + '    '
-		coin_fiat_data.append(text)
-	print(compare_list)
 	#print('display updated')
-	display_text.set(' '.join(coin_fiat_data))
+	display_text.set(' '.join(coin_data_copy))
 	# text = text[1:]+text[0]
 	master.lift()
 	master.focus()
