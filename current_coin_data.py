@@ -11,6 +11,9 @@ import platform
 import threading
 import sqlite3
 
+
+
+
 def JSONDictToDF(d):
 	'''
 	Converts a dictionary created from json.loads to a pandas dataframe
@@ -64,8 +67,8 @@ def GetCur_NoCSV(cur):
 	web_data = openUrl.read()
 	openUrl.close()
 	json_web_data = json.loads(web_data)
-	timestamp = str(datetime.datetime.fromtimestamp(json_web_data["RAW"][cur]["USD"]['LASTUPDATE']))
-	json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
+	#timestamp = str(datetime.datetime.fromtimestamp(json_web_data["RAW"][cur]["USD"]['LASTUPDATE']))
+	#json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
 	return json_web_data
 
 
@@ -80,26 +83,50 @@ def DataGrabber():
 
 
 def DataGrabber_NoCSV():
-	'''Grabs and returns all coin data from API WITHOUT making .CSV files. Used by GUI and SQL Database Logger'''
+	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds'''
+	threading.Timer(18.0, DataGrabber_NoCSV).start()
+	global CoinList
 	list_of_coin_data = []
 	for coin in coin_type:
 		text = GetCur_NoCSV(coin)
 		list_of_coin_data.append(text)
-	return (list_of_coin_data)
+	print('API Call Executed!')
+	CoinList = list_of_coin_data
+	#return (list_of_coin_data)
+
 
 def WriteToDB():
 	'''records data for each coin in its own table for local SQL database
 	   Still needs to check if table/database exists first before running'''
-	threading.Timer(300.0, WriteToDB).start()
+	threading.Timer(150.0, WriteToDB).start()
 	print('writing to database!')
 	db = sqlite3.connect('CoinData.db')
 	c = db.cursor()
 
-	for x in range(0, len(CoinList)):
+
+	for x in range(len(CoinList)):
 		dbList= CoinList[x]
+		timestamp = str(datetime.datetime.fromtimestamp(dbList["RAW"][coin_type[x]]["USD"]['LASTUPDATE']))
+		dbList["RAW"][coin_type[x]]["USD"]["LASTUPDATE"] = timestamp
+
+		c.execute('''CREATE TABLE IF NOT EXISTS {tn}(`PRICE`          INTEGER,
+													`LASTVOLUME`      INTEGER,
+													`LASTVOLUMETO`	  INTEGER,
+													`VOLUMEDAY`	      INTEGER,
+													`VOLUMEDAYTO`	  INTEGER,
+													`VOLUME24HOUR`	  INTEGER,
+													`VOLUME24HOURTO`  INTEGER,
+													`HIGH24HOUR`	  INTEGER,
+													`LOW24HOUR`	      INTEGER,
+													`MKTCAP`	      INTEGER,
+													`SUPPLY`	      INTEGER,
+													`TOTALVOLUME24H`  INTEGER,
+													`TOTALVOLUME24HTO`INTEGER,
+													`LASTUPDATE`	  INTEGER)'''.format(tn=coin_type[x]))
+
 		c.execute('''INSERT INTO {tn}(PRICE, LASTVOLUME, LASTVOLUMETO, VOLUMEDAY, VOLUMEDAYTO, VOLUME24HOUR, VOLUME24HOURTO,
-		                        HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24H, TOTALVOLUME24HTO, LASTUPDATE)
-		                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''.format(tn=coin_type[x]),
+		                             HIGH24HOUR, LOW24HOUR, MKTCAP, SUPPLY, TOTALVOLUME24H, TOTALVOLUME24HTO, LASTUPDATE)
+		             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''.format(tn=coin_type[x]),
 				  (str(dbList["RAW"][coin_type[x]]["USD"]["PRICE"]),
 				   str(dbList["RAW"][coin_type[x]]["USD"]["LASTVOLUME"]),
 				   str(dbList["RAW"][coin_type[x]]["USD"]["LASTVOLUMETO"]),
@@ -121,10 +148,12 @@ def WriteToDB():
 	print('done writing to database!')
 
 
+
 # Below block is for GUI Ticker
 # display_text = variable for text
 # msg = label that holds text
 # master = main tkinter window
+
 master = tk.Tk()
 master.geometry('1920x20+0+0')
 
@@ -143,7 +172,8 @@ msg.config(bg='black', font=('times', 12), fg='white')
 msg.pack()
 master.lift()
 
-coin_type = ['ADA', 'LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'TRX', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
+
+coin_type = ['LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
@@ -155,23 +185,35 @@ master.lift()
 master.focus()
 master.update()
 
-
+CoinList = []
 #Used for first database write and first iteration of while loop
-CoinList = DataGrabber_NoCSV()
+DataGrabber_NoCSV()
 WriteToDB()
+
+
+#2D array for comparing current value to previous value for each coin
+compare_list = [[None for x in range(2)] for y in range(len(coin_type))]
+
+
+
 
 while True:
 	coin_fiat_data = []
-	for x in range(0, len(CoinList)):
+	for x in range(len(CoinList)):
 		text= CoinList[x]
 		text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
+		#compare_value = int(text)
+		compare_list[x][1] = compare_list[x][0]
+		compare_list[x][0] = float(text)
 		text = coin_type[x] + ' :' + ' $' + text + '    '
 		coin_fiat_data.append(text)
+	print(compare_list)
 	#print('display updated')
 	display_text.set(' '.join(coin_fiat_data))
 	# text = text[1:]+text[0]
 	master.lift()
 	master.focus()
 	master.update()
-	sleep(10)
-	CoinList = DataGrabber_NoCSV()
+	sleep(1.0)
+	#CoinList = DataGrabber_NoCSV()
+
