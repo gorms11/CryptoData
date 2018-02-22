@@ -1,4 +1,4 @@
-# Pandas is the only library not in standard lib: pip install pandas
+#Pandas is the only library not in standard lib: pip install pandas
 # Works on linux/windows
 import json
 import os
@@ -112,13 +112,13 @@ def DataGrabber_NoCSV():
 				display_number_white[x].set("   ")
 				display_number_green[x].set("  " + coin_type[x] + ' :' + ' $' + text)
 
-			if compare_list[x][0] < compare_list[x][1]:
+			elif compare_list[x][0] < compare_list[x][1]:
 				display_number_green[x].set("  ")
 				display_number_red[x].set(" ")
 				display_number_white[x].set("   ")
 				display_number_red[x].set(" " + coin_type[x] + ' :' + ' $' + text)
 
-			if compare_list[x][0] == compare_list[x][1]:
+			else:
 				display_number_green[x].set("  ")
 				display_number_red[x].set(" ")
 				display_number_white[x].set(" ")
@@ -127,11 +127,12 @@ def DataGrabber_NoCSV():
 		#print(compare_list)
 		current_time = time.time()
 		elapsed_time = current_time - start
-		#print(start, ' - ', current_time, ' = ' , elapsed_time)
+		# print(start, ' - ', current_time, ' = ' , elapsed_time)
 		if elapsed_time >= 150:
 			WriteToDB(list_of_coin_data)
 			start = current_time
 		sleep(7)
+
 
 
 def WriteToDB(CoinList):
@@ -187,22 +188,36 @@ def WriteToDB(CoinList):
 
 
 
-'''
-# if linux
-if platform.system() is 'Linux':
-	root.wm_attributes('-type', 'splash', '-topmost', 1)
-
-# if windows
-if platform.system() is 'Windows':
-	root.wm_attributes('-topmost', 1)
-	root.overrideredirect(1)
 
 
-'''
+
 
 root=Tk()
-root.geometry('2560x25+0+1420')
-root.wm_attributes('-type', 'splash', '-topmost', 1)
+height = root.winfo_screenheight()
+
+# if linux
+if platform.system() == 'Linux':
+	root.wm_attributes('-type', 'splash', '-topmost', 1)
+	if height == 1440:
+		root.geometry('2560x20+0+1420')
+		padding = 40
+	elif height == 1080:
+		root.geometry('1920x20+0+1060')
+		padding = 7
+
+	else:
+		padding = 4
+
+# if windows
+if platform.system() == 'Windows':
+	root.wm_attributes('-topmost', 1)
+	root.overrideredirect(1)
+	root.geometry('1920x20+0+804')
+	padding = 7
+
+
+
+
 
 '''
 cwd = os.getcwd()  # Get the current working directory (cwd)
@@ -214,6 +229,9 @@ with open('coins.config', "r") as ins:
 	coin_type = []
 	for line in ins:
 		coin_type.append(line[0:((len(line)) - 1)])
+
+
+
 
 
 
@@ -236,20 +254,20 @@ display_number_red = []
 for i in range (len(coin_type)):
 	display_number_white.append(i)
 	display_number_white[i] = StringVar()
-	Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg ='white').grid(row=0, column=i, sticky=tk.W, padx=40) #default padx = 4
+	Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg ='white').grid(row=0, column=i, sticky=tk.W, padx=padding) #default padx = 4
 
 
 
 for i in range (len(coin_type)):
 	display_number_green.append(i)
 	display_number_green[i] = StringVar()
-	Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg ='green').grid(row=0, column=i, sticky=tk.W, padx=40)  #default padx = 4
+	Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg ='green').grid(row=0, column=i, sticky=tk.W, padx=padding)  #default padx = 4
 
 
 for i in range (len(coin_type)):
 	display_number_red.append(i)
 	display_number_red[i] = StringVar()
-	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=40)   #default padx = 4
+	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=padding)   #default padx = 4
 
 
 root.config(bg='black')
@@ -266,23 +284,17 @@ thread = threading.Thread(target=DataGrabber_NoCSV)
 thread.start()
 
 '''
-
 while Coin_List == []:
 	display_number_white[0].set("  grabbing data...please wait")
 	root.lift()
 	root.focus()
 	root.update()
 	sleep(0.05)
-
-
-
-
 display_number_white[0].set(" ")
 root.lift()
 root.focus()
 root.update()
 '''
 root.mainloop()
-
 
 
