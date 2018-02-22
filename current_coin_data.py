@@ -11,6 +11,7 @@ import platform
 import threading
 import sqlite3
 from tkinter import*
+import time
 
 
 
@@ -79,25 +80,25 @@ def DataGrabber():
 		dfp = os.path.join(datPath, coin + '.csv')
 		text = GetCurDF(coin, dfp)
 		list_of_coin_data.append(text)
-	return(list_of_coin_data)
+	return (list_of_coin_data)
 
 
 def DataGrabber_NoCSV():
-	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds
-	   Updates the string displayed in the user interface
-	   Stores current and previous values of all coins in 2D array for easy comparison'''
 
-	#threading.Timer(18.0, DataGrabber_NoCSV).start()
-	global CoinList
-	global coin_data_copy
-	global color
+	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds
+       Updates the string displayed in the user interface
+       Stores current and previous values of all coins in 2D array for easy comparison'''
+
+
+	global Coin_List
+	start = time.time()
 	while True:
 		list_of_coin_data = []
 		for coin in coin_type:
 			text = GetCur_NoCSV(coin)
 			list_of_coin_data.append(text)
 		print('API Call Executed!')
-		CoinList = list_of_coin_data
+		Coin_List = list_of_coin_data
 		# return (list_of_coin_data)
 
 		for x in range(len(list_of_coin_data)):
@@ -105,7 +106,7 @@ def DataGrabber_NoCSV():
 			text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
 			compare_list[x][1] = compare_list[x][0]
 			compare_list[x][0] = float(text)
-		#	text2 = ' ' + coin_type[x] + ' :' + ' $' + text + '    '
+			#	text2 = ' ' + coin_type[x] + ' :' + ' $' + text + '    '
 
 			if compare_list[x][0] > compare_list[x][1]:
 				display_number_green[x].set(" ")
@@ -117,7 +118,7 @@ def DataGrabber_NoCSV():
 				display_number_green[x].set(" ")
 				display_number_red[x].set(" ")
 				display_number_white[x].set(" ")
-				display_number_red[x].set("  "  + coin_type[x] + ' :' + ' $' + text)
+				display_number_red[x].set("  " + coin_type[x] + ' :' + ' $' + text)
 
 			if compare_list[x][0] == compare_list[x][1]:
 				display_number_green[x].set(" ")
@@ -125,19 +126,19 @@ def DataGrabber_NoCSV():
 				display_number_white[x].set(" ")
 				display_number_white[x].set("  " + coin_type[x] + ' :' + ' $' + text)
 
+		#print(compare_list)
+		current_time = time.time()
+		elapsed_time = current_time - start
+		#print(start, ' - ', current_time, ' = ' , elapsed_time)
+		if elapsed_time >= 150:
+			WriteToDB(list_of_coin_data)
+			start = current_time
+		sleep(7)
 
-		print(compare_list)
 
-		sleep(10)
-
-
-
-
-
-
-def WriteToDB():
+def WriteToDB(CoinList):
 	'''records data for each coin in its own table for local SQL database'''
-	threading.Timer(150.0, WriteToDB).start()
+	#threading.Timer(150.0, WriteToDB).start()
 
 	print('writing to database!')
 	db = sqlite3.connect('CoinData.db')
@@ -190,10 +191,6 @@ def WriteToDB():
 
 
 
-	# sleep(1.0)
-	# CoinList = DataGrabber_NoCSV()
-
-
 
 # Below block is for GUI Ticker
 # display_text = variable for text
@@ -221,10 +218,14 @@ if platform.system() is 'Windows':
 root=Tk()
 
 
+with open("coins.config", "r") as ins:
+	coin_type = []
+	for line in ins:
+		coin_type.append(line[0:((len(line)) - 1)])
 
 
 
-coin_type = ['LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
+#coin_type = ['LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
 	os.mkdir(datPath)
@@ -261,15 +262,9 @@ for i in range (len(coin_type)):
 root.config(bg='black')
 
 
-
-
-
-
 #2D array for comparing current value to previous value for each coin
 compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
 
-CoinList = []
-coin_data_copy = []
 
 #wait to grab initial data
 #if coin_data_copy == []:
@@ -277,31 +272,27 @@ coin_data_copy = []
 
 
 
-
+Coin_List =[]
 thread = threading.Thread(target=DataGrabber_NoCSV)
 thread.start()
 
 
 
 
-while CoinList == []:
-	display_number_white[0].set("grabbing data...please wait")
+while Coin_List == []:
+	display_number_white[0].set("  grabbing data...please wait")
 	root.lift()
 	root.focus()
 	root.update()
 	sleep(0.05)
 
 
-WriteToDB()
+
 
 display_number_white[0].set(" ")
 root.lift()
 root.focus()
 root.update()
-
-
-
-
 
 root.mainloop()
 
