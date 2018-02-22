@@ -85,12 +85,11 @@ def DataGrabber():
 
 def DataGrabber_NoCSV():
 
-	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every 18 seconds
+	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every x seconds
        Updates the string displayed in the user interface
        Stores current and previous values of all coins in 2D array for easy comparison'''
 
-
-	global Coin_List
+	display_number_white[0].set("  grabbing data...please wait")
 	start = time.time()
 	while True:
 		list_of_coin_data = []
@@ -98,7 +97,6 @@ def DataGrabber_NoCSV():
 			text = GetCur_NoCSV(coin)
 			list_of_coin_data.append(text)
 		print('API Call Executed!')
-		Coin_List = list_of_coin_data
 		# return (list_of_coin_data)
 
 		for x in range(len(list_of_coin_data)):
@@ -111,20 +109,20 @@ def DataGrabber_NoCSV():
 			if compare_list[x][0] > compare_list[x][1]:
 				display_number_green[x].set(" ")
 				display_number_red[x].set(" ")
-				display_number_white[x].set(" ")
+				display_number_white[x].set("   ")
 				display_number_green[x].set("  " + coin_type[x] + ' :' + ' $' + text)
 
 			if compare_list[x][0] < compare_list[x][1]:
-				display_number_green[x].set(" ")
+				display_number_green[x].set("  ")
 				display_number_red[x].set(" ")
-				display_number_white[x].set(" ")
-				display_number_red[x].set("  " + coin_type[x] + ' :' + ' $' + text)
+				display_number_white[x].set("   ")
+				display_number_red[x].set(" " + coin_type[x] + ' :' + ' $' + text)
 
 			if compare_list[x][0] == compare_list[x][1]:
-				display_number_green[x].set(" ")
+				display_number_green[x].set("  ")
 				display_number_red[x].set(" ")
 				display_number_white[x].set(" ")
-				display_number_white[x].set("  " + coin_type[x] + ' :' + ' $' + text)
+				display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
 
 		#print(compare_list)
 		current_time = time.time()
@@ -189,18 +187,6 @@ def WriteToDB(CoinList):
 
 
 
-
-
-
-# Below block is for GUI Ticker
-# display_text = variable for text
-# msg = label that holds text
-# master = main tkinter window
-
-
-
-
-#root.geometry('1920x20+0+0')
 '''
 # if linux
 if platform.system() is 'Linux':
@@ -212,13 +198,19 @@ if platform.system() is 'Windows':
 	root.overrideredirect(1)
 
 
-
 '''
 
 root=Tk()
+root.geometry('2560x25+0+1420')
+root.wm_attributes('-type', 'splash', '-topmost', 1)
 
+'''
+cwd = os.getcwd()  # Get the current working directory (cwd)
+files = os.listdir(cwd)  # Get all the files in that directory
+print("Files in '%s': %s" % (cwd, files))
+'''
 
-with open("coins.config", "r") as ins:
+with open('coins.config', "r") as ins:
 	coin_type = []
 	for line in ins:
 		coin_type.append(line[0:((len(line)) - 1)])
@@ -240,23 +232,24 @@ display_number_green = []
 display_number_red = []
 
 
+#three seperate colors for GUI
 for i in range (len(coin_type)):
 	display_number_white.append(i)
 	display_number_white[i] = StringVar()
-	Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg ='white').grid(row=0, column=i, sticky=tk.W, padx=4)
+	Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg ='white').grid(row=0, column=i, sticky=tk.W, padx=40) #default padx = 4
 
 
 
 for i in range (len(coin_type)):
 	display_number_green.append(i)
 	display_number_green[i] = StringVar()
-	Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg ='green').grid(row=0, column=i, sticky=tk.W, padx=4)
+	Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg ='green').grid(row=0, column=i, sticky=tk.W, padx=40)  #default padx = 4
 
 
 for i in range (len(coin_type)):
 	display_number_red.append(i)
 	display_number_red[i] = StringVar()
-	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=4)
+	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=40)   #default padx = 4
 
 
 root.config(bg='black')
@@ -266,18 +259,13 @@ root.config(bg='black')
 compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
 
 
-#wait to grab initial data
-#if coin_data_copy == []:
-	#display_number_white[0].set("Grabbing Data...Please Wait")
 
 
 
-Coin_List =[]
 thread = threading.Thread(target=DataGrabber_NoCSV)
 thread.start()
 
-
-
+'''
 
 while Coin_List == []:
 	display_number_white[0].set("  grabbing data...please wait")
@@ -293,7 +281,7 @@ display_number_white[0].set(" ")
 root.lift()
 root.focus()
 root.update()
-
+'''
 root.mainloop()
 
 
