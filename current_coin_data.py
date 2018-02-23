@@ -125,6 +125,15 @@ def DataGrabber_NoCSV():
 				display_number_white[x].set(" ")
 				display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
 
+		current_time = time.time()
+		elapsed_time = current_time - start
+		# print(start, ' - ', current_time, ' = ' , elapsed_time)
+		if elapsed_time >= 150:
+			WriteToDB(list_of_coin_data)
+			start = current_time
+
+		sleep(7)
+
 
 def WriteToDB(CoinList):
 	'''records data for each coin in its own table for local SQL database'''
