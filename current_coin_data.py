@@ -89,9 +89,10 @@ def DataGrabber_NoCSV():
        Updates the string displayed in the user interface
        Stores current and previous values of all coins in 2D array for easy comparison'''
 
+	global bool_end
 	display_number_white[0].set("  grabbing data...please wait")
 	start = time.time()
-	while True:
+	while bool_end:
 		list_of_coin_data = []
 		for coin in coin_type:
 			text = GetCur_NoCSV(coin)
@@ -123,16 +124,6 @@ def DataGrabber_NoCSV():
 				display_number_red[x].set(" ")
 				display_number_white[x].set(" ")
 				display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
-
-		#print(compare_list)
-		current_time = time.time()
-		elapsed_time = current_time - start
-		# print(start, ' - ', current_time, ' = ' , elapsed_time)
-		if elapsed_time >= 150:
-			WriteToDB(list_of_coin_data)
-			start = current_time
-		sleep(7)
-
 
 
 def WriteToDB(CoinList):
@@ -186,12 +177,18 @@ def WriteToDB(CoinList):
 	db.close()
 	print('done writing to database!')
 
+#end program
+def quit():
+	global bool_end
+	bool_end = False
+	root.destroy()
+	root.quit()
+	sys.exit()
 
 
 
 
-
-
+bool_end = True
 root=Tk()
 height = root.winfo_screenheight()
 
@@ -218,7 +215,7 @@ if platform.system() == 'Windows':
 
 
 
-
+#troubleshooting code
 '''
 cwd = os.getcwd()  # Get the current working directory (cwd)
 files = os.listdir(cwd)  # Get all the files in that directory
@@ -269,6 +266,8 @@ for i in range (len(coin_type)):
 	display_number_red[i] = StringVar()
 	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=padding)   #default padx = 4
 
+exit_button_column = (len(coin_type) + 2)
+Button(root, text='x', bg='black', font=('times', 12),bd=0, fg='black',activeforeground='black',anchor=tk.E, highlightbackground='black',command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
 root.config(bg='black')
 
@@ -296,5 +295,3 @@ root.focus()
 root.update()
 '''
 root.mainloop()
-
-
