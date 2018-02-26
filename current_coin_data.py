@@ -88,7 +88,7 @@ def DataGrabber_NoCSV():
 	'''Grabs all coin data from API WITHOUT making .CSV files. Runs every x seconds
        Updates the string displayed in the user interface
        Stores current and previous values of all coins in 2D array for easy comparison'''
-
+	global update_display
 	global bool_end
 	display_number_white[0].set("  grabbing data...please wait")
 	start = time.time()
@@ -96,9 +96,10 @@ def DataGrabber_NoCSV():
 		list_of_coin_data = []
 		for coin in coin_type:
 			text = GetCur_NoCSV(coin)
-			list_of_coin_data.append(text)
+			list_of_coin_data.append(text)   #appends API data for each coin into an array
 		print('API Call Executed!')
-		# return (list_of_coin_data)
+
+		update_display = False  #turns off display updater
 
 		for x in range(len(list_of_coin_data)):
 			text = list_of_coin_data[x]
@@ -125,14 +126,18 @@ def DataGrabber_NoCSV():
 				display_number_white[x].set(" ")
 				display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
 
+		update_display = True
 		current_time = time.time()
 		elapsed_time = current_time - start
 		# print(start, ' - ', current_time, ' = ' , elapsed_time)
-		if elapsed_time >= 150:
+		if elapsed_time >= 125:
 			WriteToDB(list_of_coin_data)
 			start = current_time
 
-		sleep(7)
+		if bool_end is False:
+			break
+
+		sleep(20)
 
 
 def WriteToDB(CoinList):
@@ -224,7 +229,7 @@ if platform.system() == 'Windows':
 
 
 
-#troubleshooting code
+#troubleshooting code. Usful to see the full directory of the database and .config being used by the program
 '''
 cwd = os.getcwd()  # Get the current working directory (cwd)
 files = os.listdir(cwd)  # Get all the files in that directory
@@ -286,21 +291,18 @@ compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
 
 
 
-
+update_display = True
 
 thread = threading.Thread(target=DataGrabber_NoCSV)
 thread.start()
 
-'''
-while Coin_List == []:
-	display_number_white[0].set("  grabbing data...please wait")
-	root.lift()
-	root.focus()
-	root.update()
-	sleep(0.05)
-display_number_white[0].set(" ")
-root.lift()
-root.focus()
-root.update()
-'''
-root.mainloop()
+
+
+#root.mainloop()   #Using mainloop() is useful if you wish to run in the program in a window.
+				   # option to run in windowed mode will be added to config file. Do not remove!
+
+while bool_end:
+	if update_display is True:  #This allows all coins to be updated at once while keeping the exit button working
+		#root.update_idletasks()    #might be useful for future update
+		root.update()
+		sleep(.3)
