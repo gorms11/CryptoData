@@ -92,7 +92,9 @@ def DataGrabber_NoCSV():
 	global bool_end
 	display_number_white[0].set("  grabbing data...please wait")
 	start = time.time()
-	while bool_end:
+
+	while bool_end:		#grabs all coin data and sets the display parameters
+						#
 		list_of_coin_data = []
 		for coin in coin_type:
 			text = GetCur_NoCSV(coin)
@@ -101,9 +103,10 @@ def DataGrabber_NoCSV():
 
 		update_display = False  #turns off display updater
 
-		for x in range(len(list_of_coin_data)):
-			text = list_of_coin_data[x]
-			text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
+		for x in range(len(list_of_coin_data)):    #iterates through each coin/textvariable comparing old value with current value to set color
+												   #note that each 'display_number_color[x] is a tkinter textvariable associated with a different column
+			#text = list_of_coin_data[x]
+			text = str(list_of_coin_data[x]['RAW'][coin_type[x]]['USD']['PRICE'])
 			compare_list[x][1] = compare_list[x][0]
 			compare_list[x][0] = float(text)
 			#	text2 = ' ' + coin_type[x] + ' :' + ' $' + text + '    '
@@ -127,6 +130,8 @@ def DataGrabber_NoCSV():
 				display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
 
 		update_display = True
+
+
 		current_time = time.time()
 		elapsed_time = current_time - start
 		# print(start, ' - ', current_time, ' = ' , elapsed_time)
@@ -134,10 +139,12 @@ def DataGrabber_NoCSV():
 			WriteToDB(list_of_coin_data)
 			start = current_time
 
-		if bool_end is False:
-			break
+		for i in range(18):
+			if bool_end is False:
+				break
+			sleep(1)
 
-		sleep(20)
+
 
 
 def WriteToDB(CoinList):
@@ -195,14 +202,14 @@ def WriteToDB(CoinList):
 def quit():
 	global bool_end
 	bool_end = False
-	root.destroy()
-	root.quit()
+	#root.destroy()
+	#root.quit()
 	sys.exit()
 
 
 
 
-bool_end = True
+bool_end = True #if false, program ends (sorry for reverse logic)
 root=Tk()
 height = root.winfo_screenheight()
 
@@ -244,8 +251,6 @@ with open('coins.config', "r") as ins:
 
 
 
-
-
 #coin_type = ['LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
@@ -262,6 +267,7 @@ display_number_red = []
 
 
 #three seperate colors for GUI
+#iterates through the length of the coin list to assign a unique textvariable and column number to each coin
 for i in range (len(coin_type)):
 	display_number_white.append(i)
 	display_number_white[i] = StringVar()
@@ -280,7 +286,7 @@ for i in range (len(coin_type)):
 	display_number_red[i] = StringVar()
 	Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg ='red').grid(row=0, column=i, sticky=tk.W, padx=padding)   #default padx = 4
 
-exit_button_column = (len(coin_type) + 2)
+exit_button_column = (len(coin_type) + 2)  #mediocre attempt to get exit button on far right of GUI
 Button(root, text='x', bg='black', font=('times', 12),bd=0, fg='black',activeforeground='black',anchor=tk.E, highlightbackground='black',command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
 root.config(bg='black')
@@ -288,7 +294,6 @@ root.config(bg='black')
 
 #2D array for comparing current value to previous value for each coin
 compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
-
 
 
 update_display = True
@@ -306,3 +311,5 @@ while bool_end:
 		#root.update_idletasks()    #might be useful for future update
 		root.update()
 		sleep(.3)
+	else:
+		sleep(.1)
