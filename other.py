@@ -83,7 +83,7 @@ def GetCur_NoCSV(json_web_data, x, dbwrite1, cur):
 
 
     print("starting thread: ", x)
-    text = str(json_web_data['RAW'][coin_type[x]]['USD']['PRICE'])
+    text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
 
     compare_list[x][1] = compare_list[x][0]
     compare_list[x][0] = float(text)
@@ -236,6 +236,7 @@ def quit():
 mutex = Lock()
 def reduced_API_latency_loop(start):
     global bool_end
+    display_number_white[0].set("  grabbing data...please wait")
     while bool_end:
         dbwrite = False
         list_of_coin_data = []
