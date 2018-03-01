@@ -259,7 +259,10 @@ def reduced_API_latency_loop(start):
             thread_api = threading.Thread(target=GetCur_NoCSV, args=(coin, x, dbwrite, coin_type[x]))
             thread_api.start()
 
-        sleep(15)
+        for i in range(15):
+            if bool_end is False:
+                break
+            sleep(1)
 
 
 bool_end = True
@@ -333,8 +336,8 @@ for i in range(len(coin_type)):
                                                                                                    padx=padding)  # default padx = 4
 
 exit_button_column = (len(coin_type) + 2)
-Button(root, text='x', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
-       highlightbackground='black', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
+Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+       highlightbackground='red', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
 root.config(bg='black')
 
