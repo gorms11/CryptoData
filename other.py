@@ -181,7 +181,7 @@ def reduced_API_latency_loop(start_time):
         for coin in coin_type:
             text = GetAPIUrl(coin)
             list_of_coin_data.append(text)
-            sleep(.2)
+            sleep(.2) #delay to not overload the API with requests
 
         current_time = time.time()
         elapsed_time = current_time - start_time
