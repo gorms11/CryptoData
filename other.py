@@ -173,7 +173,8 @@ def quit():
 
 def reduced_API_latency_loop(start_time):
     global bool_end
-    display_number_white[0].set("  grabbing data...please wait")
+    global bool_loading
+   # display_number_white[0].set("  grabbing data...please wait")
     while bool_end:
         dbwrite = False
         list_of_coin_data = []
@@ -182,6 +183,7 @@ def reduced_API_latency_loop(start_time):
             text = GetAPIUrl(coin)
             list_of_coin_data.append(text)
             sleep(.2) #delay to not overload the API with requests
+        bool_loading = False
 
         current_time = time.time()
         elapsed_time = current_time - start_time
@@ -228,7 +230,7 @@ if platform.system() == 'Linux':
 if platform.system() == 'Windows':
     root.wm_attributes('-topmost', 1)
     root.overrideredirect(1)
-    root.geometry('1920x25+0+800')
+    root.geometry('1920x25+0+1020')
     padding = 7
 
 '''
@@ -278,16 +280,31 @@ for i in range(len(coin_type)):
                                                                                                    padx=padding)  # default padx = 4
 
 exit_button_column = (len(coin_type) + 2)
-Button(root, text='x', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
-       highlightbackground='black', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
+Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+       highlightbackground='red', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
+
 
 root.config(bg='black')
 
 
-
+bool_loading = True
 start = time.time()
 thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
+
+
+load_text = StringVar()
+Label(root, textvariable=load_text, bg='black', font=('times', 12), fg='white').grid(row=0, column=1,
+                                                                                            sticky=tk.W,
+                                                                                            padx=padding)  # default padx = 4
+load_val = " grabbing_data...please wait"
+while bool_loading is True:
+    load_text.set(load_val)
+    root.update()
+    sleep(.05)
+    load_val = (" " + load_val)
+
+load_text.set("")
 
 
 root.mainloop()
