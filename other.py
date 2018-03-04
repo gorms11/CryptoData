@@ -66,21 +66,8 @@ def GetCurDF(cur, fp):
     '''
 
 
-def GetCur_NoCSV(json_web_data, x, dbwrite1, cur):
-    mutex.acquire()
-
-
-    # returns API data without using Panda Dataframes or making .csv files
-    # print('API Call Executed! ', x)
-    # openUrl = urllib.request.urlopen(
-    #	'https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + cur + '&tsyms=USD')
-    # web_data = openUrl.read()
-    # openUrl.close()
-    #	json_web_data = json.loads(web_data)
-    # timestamp = str(datetime.datetime.fromtimestamp(json_web_data["RAW"][cur]["USD"]['LASTUPDATE']))
-
-    # json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
-
+def compare_and_set_display(json_web_data, x, dbwrite1, cur):
+    ''' Compares previous fiat values to current values and sets its associated tkinter textvariable'''
 
     print("starting thread: ", x)
     text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
@@ -88,28 +75,33 @@ def GetCur_NoCSV(json_web_data, x, dbwrite1, cur):
     compare_list[x][1] = compare_list[x][0]
     compare_list[x][0] = float(text)
 
+
+
     if compare_list[x][0] > compare_list[x][1]:
+        mutex.acquire()
         display_number_green[x].set(" ")
         display_number_red[x].set(" ")
         display_number_white[x].set("   ")
-        display_number_green[x].set("  " + coin_type[x] + ' :' + ' $' + text)
+        display_number_green[x].set("  " + cur + ' :' + ' $' + text)
 
     elif compare_list[x][0] < compare_list[x][1]:
+        mutex.acquire()
         display_number_green[x].set("  ")
         display_number_red[x].set(" ")
         display_number_white[x].set("   ")
-        display_number_red[x].set(" " + coin_type[x] + ' :' + ' $' + text)
+        display_number_red[x].set(" " + cur + ' :' + ' $' + text)
 
     else:
+        mutex.acquire()
         display_number_green[x].set("  ")
         display_number_red[x].set(" ")
         display_number_white[x].set(" ")
-        display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
+        display_number_white[x].set("   " + cur + ' :' + ' $' + text)
 
+    mutex.release()
 
     if dbwrite1 is True:
         WriteToDB(json_web_data, cur)
-    mutex.release()
 
 
 '''
@@ -124,61 +116,9 @@ def DataGrabber():
 '''
 
 
-def DataGrabber_NoCSV():
-    # Grabs all coin data from API WITHOUT making .CSV files. Runs every x seconds
-    #  Updates the string displayed in the user interface
-    # Stores current and previous values of all coins in 2D array for easy comparison'
-
-    display_number_white[0].set("  grabbing data...please wait")
-    start = time.time()
-    while True:
-        list_of_coin_data = []
-        for coin in coin_type:
-            text = GetCur_NoCSV(coin)
-            list_of_coin_data.append(text)
-        print('API Call Executed!')
-        # return (list_of_coin_data)
-
-        for x in range(len(list_of_coin_data)):
-            text = list_of_coin_data[x]
-            text = str(text['RAW'][coin_type[x]]['USD']['PRICE'])
-            compare_list[x][1] = compare_list[x][0]
-            compare_list[x][0] = float(text)
-            #	text2 = ' ' + coin_type[x] + ' :' + ' $' + text + '    '
-
-            if compare_list[x][0] > compare_list[x][1]:
-                display_number_green[x].set(" ")
-                display_number_red[x].set(" ")
-                display_number_white[x].set("   ")
-                display_number_green[x].set("  " + coin_type[x] + ' :' + ' $' + text)
-
-            elif compare_list[x][0] < compare_list[x][1]:
-                display_number_green[x].set("  ")
-                display_number_red[x].set(" ")
-                display_number_white[x].set("   ")
-                display_number_red[x].set(" " + coin_type[x] + ' :' + ' $' + text)
-
-            else:
-                display_number_green[x].set("  ")
-                display_number_red[x].set(" ")
-                display_number_white[x].set(" ")
-                display_number_white[x].set("   " + coin_type[x] + ' :' + ' $' + text)
-
-        # print(compare_list)
-        current_time = time.time()
-        elapsed_time = current_time - start
-        # print(start, ' - ', current_time, ' = ' , elapsed_time)
-        if elapsed_time >= 150:
-            WriteToDB(list_of_coin_data)
-            start = current_time
-        sleep(7)
-
-
 def WriteToDB(dbList, cur):
     '''records data for each coin in its own table for local SQL database'''
-    # threading.Timer(150.0, WriteToDB).start()
 
-    #print('writing to database!')
     db = sqlite3.connect('CoinData.db')
     c = db.cursor()
 
@@ -222,19 +162,16 @@ def WriteToDB(dbList, cur):
     print('wrote to ', cur, ' database!')
 
     db.close()
-   # print('done writing to database!')
 
 
 def quit():
+    '''ends while loop and exits program'''
     global bool_end
     bool_end = False
-    root.destroy()
-    root.quit()
-    sys.exit()
+    sys.exit(0)
 
 
-mutex = Lock()
-def reduced_API_latency_loop(start):
+def reduced_API_latency_loop(start_time):
     global bool_end
     display_number_white[0].set("  grabbing data...please wait")
     while bool_end:
@@ -243,28 +180,36 @@ def reduced_API_latency_loop(start):
 
         for coin in coin_type:
             text = GetAPIUrl(coin)
-
             list_of_coin_data.append(text)
+            sleep(.2)
 
         current_time = time.time()
-        elapsed_time = current_time - start
+        elapsed_time = current_time - start_time
         if elapsed_time >= 120:
             dbwrite = True
-            start = current_time
+            start_time = current_time
 
         number_coins = len(list_of_coin_data)
      #   print('starting threads!')
         for x in range(number_coins):
-            coin = list_of_coin_data[x]
-            thread_api = threading.Thread(target=GetCur_NoCSV, args=(coin, x, dbwrite, coin_type[x]))
+            coin_data = list_of_coin_data[x]
+            thread_api = threading.Thread(target=compare_and_set_display, args=(coin_data, x, dbwrite, coin_type[x]))
             thread_api.start()
 
-        sleep(15)
+        for i in range(20):  # delay put in a forloop so program and exit faster
+            if bool_end is False:
+                break
+            sleep(1)
 
 
-bool_end = True
+
+mutex = Lock()
+bool_end = True   #ends while loops if false
 root = Tk()
 height = root.winfo_screenheight()
+update_display = True
+
+
 
 # if linux
 if platform.system() == 'Linux':
@@ -297,13 +242,13 @@ with open('coins.config', "r") as ins:
     for line in ins:
         coin_type.append(line[0:((len(line)) - 1)])
 
-# coin_type = ['LTC', 'ETH', 'XMR', 'XVG', 'XLM', 'ZEC', 'XRP', 'REQ', 'BCH', 'LINK', 'NXT', 'BTC']
+# 2D array for comparing current value to previous value for each coin
+compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
+
+
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
     os.mkdir(datPath)
-
-# root.wm_attributes('-type', 'splash', '-topmost', 1)
-
 
 
 display_number_white = []
@@ -338,22 +283,16 @@ Button(root, text='x', bg='black', font=('times', 12), bd=0, fg='black', activef
 
 root.config(bg='black')
 
-# 2D array for comparing current value to previous value for each coin
-compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
-
-update_display = True
-
 
 
 start = time.time()
 thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
 
-# thread = threading.Thread(target=DataGrabber_NoCSV)
-# thread.start()
-
 
 root.mainloop()
+
+
 '''
 while bool_end:
 	if update_display is True:  #This allows all coins to be updated at once while keeping the exit button working
