@@ -4,6 +4,7 @@ import json
 import os
 # import pandas as pd
 import urllib.request
+from urllib.error import  URLError
 import datetime
 import tkinter as tk
 from time import sleep
@@ -101,7 +102,9 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     mutex.release()
 
     if dbwrite1 is True:
-        WriteToDB(json_web_data, cur)
+        thread_database = threading.Thread(target=WriteToDB, args=(json_web_data, cur))
+        thread_database.start()
+       # WriteToDB(json_web_data, cur)
 
 
 '''
@@ -180,8 +183,27 @@ def reduced_API_latency_loop(start_time):
         list_of_coin_data = []
 
         for coin in coin_type:
-            text = GetAPIUrl(coin)
-            list_of_coin_data.append(text)
+            try:
+                openUrl = urllib.request.urlopen(
+                    'https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + coin + '&tsyms=USD')
+                web_data = openUrl.read()
+                openUrl.close()
+                text = json.loads(web_data)
+                list_of_coin_data.append(text)
+            except URLError as e:
+                if hasattr(e, 'reason'):
+                    print('failed to reach API, check internet connection.')
+                    print('Reason: ', e.reason)
+                elif hasattr(e, 'code'):
+                    print('The server couldn\'t fulfill the request.')
+                    print('Error code: ', e.code)
+
+
+
+           # web_data = openUrl.read()
+
+           # text = GetAPIUrl(coin)
+
             sleep(.2) #delay to not overload the API with requests
         bool_loading = False
 
@@ -278,11 +300,17 @@ for i in range(len(coin_type)):
     Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i,
                                                                                                    sticky=tk.W,
                                                                                                    padx=padding)  # default padx = 4
-
-exit_button_column = (len(coin_type) + 2)
-Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+if platform.system() == 'Windows':
+    exit_button_column = (len(coin_type) + 2)
+    Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
        highlightbackground='red', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
+
+
+if platform.system() == 'Linux':
+    exit_button_column = (len(coin_type) + 2)
+    Button(root, text='x', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
+    highlightbackground='black', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
 root.config(bg='black')
 
