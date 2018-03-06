@@ -71,40 +71,49 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     ''' Compares previous fiat values to current values and sets its associated tkinter textvariable'''
 
     print("starting thread: ", x)
-    text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
 
+
+    try:
+        text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
+    except KeyError:
+        print("bad data, check internet connection")
+        return
+
+    mutex.acquire()
     compare_list[x][1] = compare_list[x][0]
     compare_list[x][0] = float(text)
 
 
 
     if compare_list[x][0] > compare_list[x][1]:
-        mutex.acquire()
+
         display_number_green[x].set(" ")
         display_number_red[x].set(" ")
         display_number_white[x].set("   ")
         display_number_green[x].set("  " + cur + ' :' + ' $' + text)
 
     elif compare_list[x][0] < compare_list[x][1]:
-        mutex.acquire()
+
         display_number_green[x].set("  ")
         display_number_red[x].set(" ")
         display_number_white[x].set("   ")
         display_number_red[x].set(" " + cur + ' :' + ' $' + text)
 
     else:
-        mutex.acquire()
+
         display_number_green[x].set("  ")
         display_number_red[x].set(" ")
         display_number_white[x].set(" ")
         display_number_white[x].set("   " + cur + ' :' + ' $' + text)
 
-    mutex.release()
+
 
     if dbwrite1 is True:
         thread_database = threading.Thread(target=WriteToDB, args=(json_web_data, cur))
         thread_database.start()
        # WriteToDB(json_web_data, cur)
+
+    mutex.release()
 
 
 '''
@@ -182,29 +191,27 @@ def reduced_API_latency_loop(start_time):
         dbwrite = False
         list_of_coin_data = []
 
-        for coin in coin_type:
-            try:
+        try:
+            for coin in coin_type:
+                print("grabbing ", coin)
                 openUrl = urllib.request.urlopen(
                     'https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + coin + '&tsyms=USD')
                 web_data = openUrl.read()
                 openUrl.close()
                 text = json.loads(web_data)
                 list_of_coin_data.append(text)
-            except URLError as e:
-                if hasattr(e, 'reason'):
-                    print('failed to reach API, check internet connection.')
-                    print('Reason: ', e.reason)
-                elif hasattr(e, 'code'):
-                    print('The server couldn\'t fulfill the request.')
-                    print('Error code: ', e.code)
+                sleep(.2)  # delay to not overload the API with requests
+
+        except URLError as e:
+
+            if hasattr(e, 'reason'):
+                print('failed to reach API, check internet connection.')
+                print('Reason: ', e.reason)
+            elif hasattr(e, 'code'):
+                print('The API couldn\'t fulfill the request.')
+                print('Error code: ', e.code)
 
 
-
-           # web_data = openUrl.read()
-
-           # text = GetAPIUrl(coin)
-
-            sleep(.2) #delay to not overload the API with requests
         bool_loading = False
 
         current_time = time.time()
@@ -220,7 +227,7 @@ def reduced_API_latency_loop(start_time):
             thread_api = threading.Thread(target=compare_and_set_display, args=(coin_data, x, dbwrite, coin_type[x]))
             thread_api.start()
 
-        for i in range(20):  # delay put in a forloop so program and exit faster
+        for i in range(17):  # delay put in a forloop so program and exit faster
             if bool_end is False:
                 break
             sleep(1)
@@ -333,7 +340,6 @@ while bool_loading is True:
     load_val = (" " + load_val)
 
 load_text.set("")
-
 
 root.mainloop()
 
