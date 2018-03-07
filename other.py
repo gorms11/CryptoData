@@ -75,9 +75,10 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
 
     try:
         text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
-    except KeyError:
+    except KeyError or Exception:
         print("bad data, check internet connection")
         return
+   
 
     mutex.acquire()
     compare_list[x][1] = compare_list[x][0]
@@ -86,25 +87,24 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
 
 
     if compare_list[x][0] > compare_list[x][1]:
-
-        display_number_green[x].set(" ")
-        display_number_red[x].set(" ")
-        display_number_white[x].set("   ")
-        display_number_green[x].set("  " + cur + ' :' + ' $' + text)
+        display_number_green[x].set(' ')
+        display_number_red[x].set('')
+        display_number_white[x].set('    ')
+        display_number_green[x].set('    ' + cur + ' : $' + text)
 
     elif compare_list[x][0] < compare_list[x][1]:
 
-        display_number_green[x].set("  ")
-        display_number_red[x].set(" ")
-        display_number_white[x].set("   ")
-        display_number_red[x].set(" " + cur + ' :' + ' $' + text)
+        display_number_green[x].set(' ')
+        display_number_red[x].set('')
+        display_number_white[x].set(' ')
+        display_number_red[x].set('   ' + cur + ' : $' + text)
 
     else:
 
-        display_number_green[x].set("  ")
-        display_number_red[x].set(" ")
-        display_number_white[x].set(" ")
-        display_number_white[x].set("   " + cur + ' :' + ' $' + text)
+        display_number_green[x].set(' ')
+        display_number_red[x].set('')
+        display_number_white[x].set('   ')
+        display_number_white[x].set('    ' + cur + ' : $' + text)
 
 
 
@@ -200,6 +200,8 @@ def reduced_API_latency_loop(start_time):
                 openUrl.close()
                 text = json.loads(web_data)
                 list_of_coin_data.append(text)
+                if bool_end is False:
+                    break
                 sleep(.2)  # delay to not overload the API with requests
 
         except URLError as e:
@@ -211,8 +213,11 @@ def reduced_API_latency_loop(start_time):
                 print('The API couldn\'t fulfill the request.')
                 print('Error code: ', e.code)
 
-
+        mutex2.acquire()
         bool_loading = False
+        mutex2.release()
+        sleep(.1) # give "grabbing data" loop time to end
+
 
         current_time = time.time()
         elapsed_time = current_time - start_time
@@ -232,13 +237,145 @@ def reduced_API_latency_loop(start_time):
                 break
             sleep(1)
 
+def add_frame(bool_frame):
+    global toggle_frame
+    global root
+
+    root.destroy()
+    root.quit()
+
+    root = Tk()
+
+
+
+    height = root.winfo_screenheight()
+    update_display = True
+
+    # if linux
+    if platform.system() == 'Linux':
+        if toggle_frame is False:
+            root.wm_attributes('-type', 'splash', '-topmost', 1)
+        else:
+            root.wm_attributes('-topmost', 1)
+        if height == 1440:
+            root.geometry('2560x25+0+1420')
+            padding = 3
+        elif height == 1080:
+            root.geometry('1920x25+0+1060')
+            padding = 3
+
+        else:
+            root.geometry('1920x25+0+1060')
+            padding = 3
+
+    # if windows
+    if platform.system() == 'Windows':
+        root.wm_attributes('-topmost', 1)
+        if toggle_frame is False:
+            root.overrideredirect(1)
+
+        root.geometry('1920x25+0+1020')
+        padding = 3
+    toggle_frame = not bool_frame
+    for i in range(len(coin_type)):
+        root.grid_columnconfigure(i, weight=1)
+        display_number_white.append(i)
+        display_number_white[i] = StringVar()
+        Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white').grid(row=0,
+                                                                                                           column=i,
+
+                                                                                                           padx=padding)  # default padx = 4
+
+    for i in range(len(coin_type)):
+        display_number_green.append(i)
+        display_number_green[i] = StringVar()
+        Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0,
+                                                                                                           column=i,
+
+                                                                                                           padx=padding)  # default padx = 4
+
+    for i in range(len(coin_type)):
+        display_number_red.append(i)
+        display_number_red[i] = StringVar()
+        Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i,
+
+                                                                                                       padx=padding)  # default padx = 4
+    if platform.system() == 'Windows':
+        exit_button_column = (len(coin_type) + 2)
+        Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+               highlightbackground='red', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
+                                                                                 padx=28)
+
+    if platform.system() == 'Linux':
+        exit_button_column = (len(coin_type) + 1)
+        Button(root, text='^', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
+               highlightbackground='black', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
+                                                                                   padx=0)
+
+    root.config(bg='black')
+    load_text = StringVar()
+    Label(root, textvariable=load_text, bg='black', font=('times', 12), fg='white').grid(row=0, column=1,
+                                                                                         sticky=tk.W,
+                                                                                         padx=padding)  # default padx = 4
+
+
+    thread_loading_message = threading.Thread(target=loading_message)
+    thread_loading_message.start()
+
+    root.mainloop()
+
+
+
+def loading_message():
+    global bool_loading
+    global bool_end
+    load_val = " grabbing_data...please wait"
+
+    mutex2.acquire()
+    bool_loading = True
+    mutex2.release()
+    mutex.acquire()
+    while bool_loading is True and bool_end is True:
+        display_number_white[0].set(load_val)
+       # root.update()
+        sleep(.05)
+        load_val = (" " + load_val)
+    display_number_white[0].set("")
+    mutex.release()
+
+
+
+
+
+
+def ticker_options():
+    root2 = Tk()
+    root2.grid_rowconfigure(0, weight=1)
+    root2.grid_rowconfigure(1, weight=1)
+    root2.grid_columnconfigure(0, weight=1)
+
+    Button(root2, text='       quit        ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+           highlightbackground='black', command=lambda: quit()).grid(row=0, column=0, padx=0)
+
+    Button(root2, text='toggle frame/anchor', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+           highlightbackground='black', command=lambda: add_frame(toggle_frame)).grid(row=1, column=0, padx=0)
+    x = toggle_frame
+    root2.mainloop()
+    #while x == toggle_frame:
+       # root2.update()
+       # print("root2 loop")
+       # sleep(.2)
+
 
 
 mutex = Lock()
+mutex2 = Lock()
 bool_end = True   #ends while loops if false
 root = Tk()
 height = root.winfo_screenheight()
 update_display = True
+toggle_frame = False
+bool_loading = True
 
 
 
@@ -247,7 +384,7 @@ if platform.system() == 'Linux':
     root.wm_attributes('-type', 'splash', '-topmost', 1)
     if height == 1440:
         root.geometry('2560x25+0+1420')
-        padding = 38
+        padding = 3
     elif height == 1080:
         root.geometry('1920x25+0+1060')
         padding = 7
@@ -261,6 +398,7 @@ if platform.system() == 'Windows':
     root.overrideredirect(1)
     root.geometry('1920x25+0+1020')
     padding = 7
+
 
 '''
 cwd = os.getcwd()  # Get the current working directory (cwd)
@@ -286,62 +424,19 @@ display_number_white = []
 display_number_green = []
 display_number_red = []
 
-# three seperate colors for GUI
-for i in range(len(coin_type)):
-    display_number_white.append(i)
-    display_number_white[i] = StringVar()
-    Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white').grid(row=0, column=i,
-                                                                                                       sticky=tk.W,
-                                                                                                       padx=padding)  # default padx = 4
-
-for i in range(len(coin_type)):
-    display_number_green.append(i)
-    display_number_green[i] = StringVar()
-    Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0, column=i,
-                                                                                                       sticky=tk.W,
-                                                                                                       padx=padding)  # default padx = 4
-
-for i in range(len(coin_type)):
-    display_number_red.append(i)
-    display_number_red[i] = StringVar()
-    Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i,
-                                                                                                   sticky=tk.W,
-                                                                                                   padx=padding)  # default padx = 4
-if platform.system() == 'Windows':
-    exit_button_column = (len(coin_type) + 2)
-    Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
-       highlightbackground='red', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
 
 
-
-if platform.system() == 'Linux':
-    exit_button_column = (len(coin_type) + 2)
-    Button(root, text='x', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
-    highlightbackground='black', command=lambda: quit()).grid(row=0, column=exit_button_column, padx=28)
-
-root.config(bg='black')
-
-
-bool_loading = True
 start = time.time()
 thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
 
 
-load_text = StringVar()
-Label(root, textvariable=load_text, bg='black', font=('times', 12), fg='white').grid(row=0, column=1,
-                                                                                            sticky=tk.W,
-                                                                                            padx=padding)  # default padx = 4
-load_val = " grabbing_data...please wait"
-while bool_loading is True:
-    load_text.set(load_val)
-    root.update()
-    sleep(.05)
-    load_val = (" " + load_val)
 
-load_text.set("")
+add_frame(toggle_frame)
 
-root.mainloop()
+
+
+
 
 
 '''
