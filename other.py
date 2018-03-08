@@ -180,16 +180,24 @@ def quit():
     '''ends while loop and exits program'''
     global bool_end
     global root
-    root.destroy()
-    root.quit()
+    global windows_end
     bool_end = False
+    #root.destroy()
+    root.quit()
+   # quit()
     sys.exit(0)
+
+
+
+
+
 
 
 
 def reduced_API_latency_loop(start_time):
     global bool_end
     global bool_loading
+    global windows_end
    # display_number_white[0].set("  grabbing data...please wait")
     while bool_end:
         dbwrite = False
@@ -205,7 +213,7 @@ def reduced_API_latency_loop(start_time):
                 text = json.loads(web_data)
                 list_of_coin_data.append(text)
                 if bool_end is False:
-                    break
+                    sys.exit(0)
                 sleep(.2)  # delay to not overload the API with requests
 
         except URLError as e: #error handling for network connectivity issues
@@ -235,11 +243,13 @@ def reduced_API_latency_loop(start_time):
             coin_data = list_of_coin_data[x]
             thread_api = threading.Thread(target=compare_and_set_display, args=(coin_data, x, dbwrite, coin_type[x]))
             thread_api.start()
-
+        sleep(.15)
+        windows_end = True
         for i in range(17):  # delay put in a forloop so program and exit faster
             if bool_end is False:
-                break
+                sys.exit(0)
             sleep(1)
+        windows_end = False
 
 def add_frame(bool_frame, anchor, layer):
     global toggle_frame
@@ -248,7 +258,6 @@ def add_frame(bool_frame, anchor, layer):
 
     set_anchor = str(root.wm_geometry())
    # print(set_anchor)
-
     root.destroy()
     root.quit()
     root = Tk()
@@ -411,7 +420,7 @@ def ticker_options():
     root2.grid_columnconfigure(0, weight=1)
 
     Button(root2, text='        quit        ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
-           highlightbackground='black', command=lambda: quit()).grid(row=0, column=0, padx=0)
+           highlightbackground='black', command=lambda: root.protocol('WM_DELETE_WINDOW', quit())).grid(row=0, column=0, padx=0)
 
     Button(root2, text='toggle window/anchor', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: add_frame(toggle_frame, 1, 0)).grid(row=1, column=0, padx=0)
@@ -436,8 +445,7 @@ height = root.winfo_screenheight()
 toggle_frame = True
 bool_loading = True
 toggle_layer = True
-
-
+windows_end = False
 
 
 '''
