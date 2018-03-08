@@ -359,12 +359,15 @@ def add_frame(bool_frame, anchor, layer):
 
 #button to open up options menue. For some reason it works differently on windows compared to linux....
     if platform.system() == 'Windows':
+
         exit_button_column = (len(coin_type) + 1)
-        Button(root, text='^', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+        Button(root, text='^  ', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
                highlightbackground='red', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
-                                                                                 padx=28)
+                                                                                 padx=0)
 
     if platform.system() == 'Linux':
+        root.grid_columnconfigure(len(coin_type) + 1, weight=1)  # assign weight to every column so GUI spacing scales
+        root.grid_rowfigure(len(coin_type) + 1, weight=1)  # assign weight to every column so GUI spacing scales
         exit_button_column = (len(coin_type) + 1)
         Button(root, text='^', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
                highlightbackground='black', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
@@ -417,19 +420,19 @@ def ticker_options():
     root2.grid_rowconfigure(1, weight=1)
     root2.grid_columnconfigure(0, weight=1)
 
-    Button(root2, text='        quit        ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+    Button(root2, text="                 quit                   ", bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: root.protocol('WM_DELETE_WINDOW', quit())).grid(row=0, column=0, padx=0)
 
     Button(root2, text='toggle window/anchor', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: add_frame(toggle_frame, 1, 0)).grid(row=1, column=0, padx=0)
 
-    Button(root2, text='  togge force top   ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+    Button(root2, text="      togge force top       ", bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: add_frame(toggle_frame, 1, 1)).grid(row=2, column=0, padx=0)
 
-    Button(root2, text='    anchor bottom   ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+    Button(root2, text="       anchor bottom        ", bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: add_frame(toggle_frame, 2, 0)).grid(row=3, column=0, padx=0)
 
-
+    root.resizable(width=False, height=False)
     root2.mainloop()
 
 
