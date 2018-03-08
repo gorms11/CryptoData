@@ -182,10 +182,8 @@ def quit():
     global root
     global windows_end
     bool_end = False
-    #root.destroy()
-    root.quit()
-   # quit()
-    sys.exit(0)
+    os._exit(0)
+
 
 
 
@@ -361,8 +359,8 @@ def add_frame(bool_frame, anchor, layer):
 
 #button to open up options menue. For some reason it works differently on windows compared to linux....
     if platform.system() == 'Windows':
-        exit_button_column = (len(coin_type) + 2)
-        Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+        exit_button_column = (len(coin_type) + 1)
+        Button(root, text='^', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
                highlightbackground='red', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
                                                                                  padx=28)
 
