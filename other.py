@@ -73,7 +73,7 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     print("starting thread: ", x)
 
 
-    try:
+    try: #potential exceptions if an invalid dictionary is passed into this method
         text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
     except KeyError or Exception:
         print("bad data, check internet connection")
@@ -179,8 +179,12 @@ def WriteToDB(dbList, cur):
 def quit():
     '''ends while loop and exits program'''
     global bool_end
+    global root
+    root.destroy()
+    root.quit()
     bool_end = False
     sys.exit(0)
+
 
 
 def reduced_API_latency_loop(start_time):
@@ -204,7 +208,7 @@ def reduced_API_latency_loop(start_time):
                     break
                 sleep(.2)  # delay to not overload the API with requests
 
-        except URLError as e:
+        except URLError as e: #error handling for network connectivity issues
 
             if hasattr(e, 'reason'):
                 print('failed to reach API, check internet connection.')
@@ -214,13 +218,13 @@ def reduced_API_latency_loop(start_time):
                 print('Error code: ', e.code)
 
         mutex2.acquire()
-        bool_loading = False
+        bool_loading = False #end loading display message when data is ready to be displayed
         mutex2.release()
         sleep(.1) # give "grabbing data" loop time to end
 
 
         current_time = time.time()
-        elapsed_time = current_time - start_time
+        elapsed_time = current_time - start_time #computes time since last database write
         if elapsed_time >= 120:
             dbwrite = True
             start_time = current_time
@@ -237,69 +241,116 @@ def reduced_API_latency_loop(start_time):
                 break
             sleep(1)
 
-def add_frame(bool_frame):
+def add_frame(bool_frame, anchor, layer):
     global toggle_frame
     global root
+    global toggle_layer
+
+    set_anchor = str(root.wm_geometry())
+   # print(set_anchor)
 
     root.destroy()
     root.quit()
-
     root = Tk()
+    root.resizable(width=True, height=False)
 
 
+    if layer == 1:
+        toggle_layer = not toggle_layer #toggles forcing top of display on and off
 
-    height = root.winfo_screenheight()
-    update_display = True
+        toggle_frame = not bool_frame #if this is not inverted, then a window will switch to an anchor
+                                      #and an anchor will switch to a window. We don't want that.
+
+
+    if toggle_layer is True:
+        layer = 1 #if 1, display is forced to top of screen
+    else:
+        layer = 0 #if 0, other window layers (such as a web browser) can stack on top of GUI
+
+   # print(toggle_frame)
 
     # if linux
-    if platform.system() == 'Linux':
-        if toggle_frame is False:
-            root.wm_attributes('-type', 'splash', '-topmost', 1)
-        else:
-            root.wm_attributes('-topmost', 1)
-        if height == 1440:
-            root.geometry('2560x25+0+1420')
-            padding = 3
-        elif height == 1080:
-            root.geometry('1920x25+0+1060')
-            padding = 3
+    if anchor == 2:  #anchor bottom
+        if platform.system() == 'Linux':
+            root.wm_attributes('-type', 'splash', '-topmost', layer)
+            if height == 1440:
+                root.geometry('2560x25+0+1420')
+            else:
+                root.geometry('1920x25+0+1060') #only 2 resolution options for now
 
-        else:
-            root.geometry('1920x25+0+1060')
-            padding = 3
-
-    # if windows
-    if platform.system() == 'Windows':
-        root.wm_attributes('-topmost', 1)
-        if toggle_frame is False:
+        if platform.system() == 'Windows':
+            root.wm_attributes('-topmost', layer)
             root.overrideredirect(1)
+            root.geometry('1920x25+0+1020')
 
-        root.geometry('1920x25+0+1020')
-        padding = 3
-    toggle_frame = not bool_frame
+
+
+
+    if toggle_frame is False:
+        if anchor == 1:     #anchor current position with no window frame
+            root.geometry(set_anchor)
+            if platform.system() == 'Linux':
+                root.wm_attributes('-type', 'splash', '-topmost', layer)
+            else:
+                root.wm_attributes('-topmost', layer)
+                root.overrideredirect(1)
+
+    else:   #set window ~middle of screen at start (with window frame)
+        if anchor == 0:
+            root.wm_attributes('-topmost', layer)
+
+            #overly complicated way for computing central position
+            w = root.winfo_screenwidth()
+            h = root.winfo_screenheight()
+            size = tuple(int(_) for _ in root.geometry().split('+')[0].split('x'))
+            x = str((w / 2 - size[0] / 2) - 640)
+            if x.__contains__('.'):
+                x = x[:x.index(".")]
+            y = str(h / 2 - size[1] / 2)
+            if y.__contains__('.'):
+                y = y[:y.index(".")]
+
+            root.geometry('1280x25+'+ x +'+' + y)
+
+        else: # switch from anchored to window frame at the current position
+            if anchor == 1:
+                root.wm_attributes('-topmost', layer)
+                root.geometry(set_anchor)
+
+    padding = 3
+    toggle_frame = not toggle_frame
+
+
+
+#here we make all the necessary columns for all 3 colors
+
     for i in range(len(coin_type)):
-        root.grid_columnconfigure(i, weight=1)
+        root.grid_columnconfigure(i, weight=1) #assign weight to every column so GUI spacing scales
         display_number_white.append(i)
         display_number_white[i] = StringVar()
         Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white').grid(row=0,
                                                                                                            column=i,
+                                                                                                           padx=padding)
 
-                                                                                                           padx=padding)  # default padx = 4
 
     for i in range(len(coin_type)):
         display_number_green.append(i)
         display_number_green[i] = StringVar()
         Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0,
                                                                                                            column=i,
-
-                                                                                                           padx=padding)  # default padx = 4
+                                                                                                           padx=padding)
 
     for i in range(len(coin_type)):
         display_number_red.append(i)
         display_number_red[i] = StringVar()
         Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i,
+                                                                                                       padx=padding)
 
-                                                                                                       padx=padding)  # default padx = 4
+
+
+
+
+#button to open up options menue. For some reason it works differently on windows compared to linux....
     if platform.system() == 'Windows':
         exit_button_column = (len(coin_type) + 2)
         Button(root, text='.', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
@@ -313,12 +364,10 @@ def add_frame(bool_frame):
                                                                                    padx=0)
 
     root.config(bg='black')
-    load_text = StringVar()
-    Label(root, textvariable=load_text, bg='black', font=('times', 12), fg='white').grid(row=0, column=1,
-                                                                                         sticky=tk.W,
-                                                                                         padx=padding)  # default padx = 4
 
 
+
+    #starts the loading screen while json data is fetched
     thread_loading_message = threading.Thread(target=loading_message)
     thread_loading_message.start()
 
@@ -327,13 +376,17 @@ def add_frame(bool_frame):
 
 
 def loading_message():
+    #displays a loading message while json data is being fetched
     global bool_loading
     global bool_end
     load_val = " grabbing_data...please wait"
 
+    #memory safety because we're writing a global values that another loop also writes to
     mutex2.acquire()
     bool_loading = True
     mutex2.release()
+    #different mutex here
+
     mutex.acquire()
     while bool_loading is True and bool_end is True:
         display_number_white[0].set(load_val)
@@ -348,56 +401,43 @@ def loading_message():
 
 
 
+
 def ticker_options():
+    #buttons in the options window
+
     root2 = Tk()
     root2.grid_rowconfigure(0, weight=1)
     root2.grid_rowconfigure(1, weight=1)
     root2.grid_columnconfigure(0, weight=1)
 
-    Button(root2, text='       quit        ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+    Button(root2, text='        quit        ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
            highlightbackground='black', command=lambda: quit()).grid(row=0, column=0, padx=0)
 
-    Button(root2, text='toggle frame/anchor', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
-           highlightbackground='black', command=lambda: add_frame(toggle_frame)).grid(row=1, column=0, padx=0)
-    x = toggle_frame
+    Button(root2, text='toggle window/anchor', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+           highlightbackground='black', command=lambda: add_frame(toggle_frame, 1, 0)).grid(row=1, column=0, padx=0)
+
+    Button(root2, text='  togge force top   ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+           highlightbackground='black', command=lambda: add_frame(toggle_frame, 1, 1)).grid(row=2, column=0, padx=0)
+
+    Button(root2, text='    anchor bottom   ', bg='white', font=("Helvetica", 12, "bold"), bd=0, fg='black', activeforeground='black',
+           highlightbackground='black', command=lambda: add_frame(toggle_frame, 2, 0)).grid(row=3, column=0, padx=0)
+
+
     root2.mainloop()
-    #while x == toggle_frame:
-       # root2.update()
-       # print("root2 loop")
-       # sleep(.2)
 
 
 
 mutex = Lock()
 mutex2 = Lock()
-bool_end = True   #ends while loops if false
+bool_end = True   #ends while loops if false, sorry for reverse logic
 root = Tk()
 height = root.winfo_screenheight()
-update_display = True
-toggle_frame = False
+#update_display = True
+toggle_frame = True
 bool_loading = True
+toggle_layer = True
 
 
-
-# if linux
-if platform.system() == 'Linux':
-    root.wm_attributes('-type', 'splash', '-topmost', 1)
-    if height == 1440:
-        root.geometry('2560x25+0+1420')
-        padding = 3
-    elif height == 1080:
-        root.geometry('1920x25+0+1060')
-        padding = 7
-
-    else:
-        padding = 4
-
-# if windows
-if platform.system() == 'Windows':
-    root.wm_attributes('-topmost', 1)
-    root.overrideredirect(1)
-    root.geometry('1920x25+0+1020')
-    padding = 7
 
 
 '''
@@ -406,33 +446,35 @@ files = os.listdir(cwd)  # Get all the files in that directory
 print("Files in '%s': %s" % (cwd, files))
 '''
 
+#reads coins from coins.config file
 with open('coins.config', "r") as ins:
     coin_type = []
     for line in ins:
         coin_type.append(line[0:((len(line)) - 1)])
 
+
 # 2D array for comparing current value to previous value for each coin
 compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
 
-
+#makes a directory path for something that will be implemented later
 datPath = 'CurDat/'
 if not os.path.exists(datPath):
     os.mkdir(datPath)
 
-
+#arrays used as tkinter TextVariables
 display_number_white = []
 display_number_green = []
 display_number_red = []
 
 
-
+#starts the loop that grabs json data from api and keeps track of elapsed time
 start = time.time()
 thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
 
 
-
-add_frame(toggle_frame)
+#starts the GUI method
+add_frame(toggle_frame, 0, 0)
 
 
 
