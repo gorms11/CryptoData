@@ -2,7 +2,6 @@
 # Works on linux/windows
 import json
 import os
-# import pandas as pd
 import urllib.request
 from urllib.error import  URLError
 import datetime
@@ -16,23 +15,6 @@ import time
 import sys
 from threading import Lock
 
-'''
-def JSONDictToDF(d):
-
-	#Converts a dictionary created from json.loads to a pandas dataframe
-#	d:      The dictionary
-
-	length = len(d)
-	cols = []
-	if length > 0:  # Place the column in sorted order
-		cols = sorted(list(d[0].keys()))
-	df = pd.DataFrame(columns=cols, index=range(length))
-	for i in range(length):
-		for coli in cols:
-			df.set_value(i, coli, d[i][coli])
-	return df
-
-'''
 global_label = [] 
 number_of_coins =  None
 
@@ -43,30 +25,6 @@ def GetAPIUrl(cur):
     openUrl.close()
     json_web_data = json.loads(web_data)
     return json_web_data
-
-
-'''
-def GetCurDF(cur, fp):
-
-   # cur:    3 letter abbreviation for cryptocurrency (BTC, LTC, etc)
-    #fp:     File path (to save price data to CSV)
-
-    openUrl = urllib.request.urlopen(GetAPIUrl(cur))
-    web_data = openUrl.read()
-    openUrl.close()
-    json_web_data = json.loads(web_data)
-    timestamp = str(datetime.datetime.fromtimestamp(json_web_data["RAW"][cur]["USD"]['LASTUPDATE']))
-    json_web_data["RAW"][cur]["USD"]['LASTUPDATE'] = timestamp
-    string_json_web_data = str(json_web_data["RAW"][cur]["USD"])
-    string_json_web_data = '[' + string_json_web_data + ']'
-    # print(string_json_web_data)
-    modified_json_web_data = json.loads(string_json_web_data.replace("\'", "\""))
-    dict_json_web_data = JSONDictToDF(modified_json_web_data)
-    dict_json_web_data.to_csv(fp, sep=',')
-    return dict_json_web_data
-    # return dict_json_web_data  # %%Path to store cached currency data
-    '''
-
 
 def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     global global_label
@@ -134,19 +92,6 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
 
     mutex.release()
 
-
-'''
-def DataGrabber():
-    #Grabs and returns all coin data from API AND makes .CSV files
-    list_of_coin_data = []
-    for coin in coin_type:
-        dfp = os.path.join(datPath, coin + '.csv')
-        text = GetCurDF(coin, dfp)
-        list_of_coin_data.append(text)
-    return (list_of_coin_data)
-'''
-
-
 def WriteToDB(dbList, cur):
     '''records data for each coin in its own table for local SQL database'''
 
@@ -203,19 +148,11 @@ def quit():
     bool_end = False
     os._exit(0)
 
-
-
-
-
-
-
-
-
 def reduced_API_latency_loop(start_time):
     global bool_end
     global bool_loading
     global windows_end
-   # display_number_white[0].set("  grabbing data...please wait")
+
     while bool_end:
         dbwrite = False
         list_of_coin_data = []
@@ -293,8 +230,6 @@ def add_frame(bool_frame, anchor, layer):
     else:
         layer = 0 #if 0, other window layers (such as a web browser) can stack on top of GUI
 
-   # print(toggle_frame)
-
     # if linux
     if anchor == 2:  #anchor bottom
         if platform.system() == 'Linux':
@@ -356,25 +291,9 @@ def add_frame(bool_frame, anchor, layer):
         display_number_white.append(i)
         display_number_white[i] = StringVar()
         global_label.append(Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white'))
-        #Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white')
-        #labels[i] = Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white')
         global_label[i].grid(row=0,column=i)
 
-    #for i in range(len(coin_type)):
-    #    display_number_green.append(i)
-    #    display_number_green[i] = StringVar()
-    #    Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0,column=i)
-
-    #for i in range(len(coin_type)):
-    #    display_number_red.append(i)
-    #    display_number_red[i] = StringVar()
-    #    Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i)
-
-
-
-
-
-#button to open up options menue. For some reason it works differently on windows compared to linux....
+    #button to open up options menue. For some reason it works differently on windows compared to linux....
     if platform.system() == 'Windows':
 
         exit_button_column = (len(coin_type) + 1)
@@ -391,8 +310,6 @@ def add_frame(bool_frame, anchor, layer):
                                                                                    padx=0)
 
     root.config(bg='black')
-
-
 
     #starts the loading screen while json data is fetched
     thread_loading_message = threading.Thread(target=loading_message)
@@ -424,11 +341,6 @@ def loading_message():
     mutex.release()
 
 
-
-
-
-
-
 def ticker_options():
     #buttons in the options window
 
@@ -453,7 +365,6 @@ def ticker_options():
     root2.mainloop()
 
 
-
 mutex = Lock()
 mutex2 = Lock()
 bool_end = True   #ends while loops if false, sorry for reverse logic
@@ -465,12 +376,6 @@ bool_loading = True
 toggle_layer = True
 windows_end = False
 
-
-'''
-cwd = os.getcwd()  # Get the current working directory (cwd)
-files = os.listdir(cwd)  # Get all the files in that directory
-print("Files in '%s': %s" % (cwd, files))
-'''
 
 #reads coins from coins.config file
 with open('coins.config', "r") as ins:
@@ -495,27 +400,10 @@ display_number_white = []
 display_number_green = []
 display_number_red = []
 
-
 #starts the loop that grabs json data from api and keeps track of elapsed time
 start = time.time()
 thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
 
-
 #starts the GUI method
 add_frame(toggle_frame, 0, 0)
-
-
-
-
-
-
-'''
-while bool_end:
-	if update_display is True:  #This allows all coins to be updated at once while keeping the exit button working
-		#root.update_idletasks()    #might be useful for future update
-		root.update()
-		sleep(.3)
-	else:
-	sleep(.1)
-'''
