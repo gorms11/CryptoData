@@ -290,14 +290,14 @@ def add_frame(bool_frame, anchor, layer):
         root.grid_columnconfigure(i, weight=1) #assign weight to every column so GUI spacing scales
         display_number_white.append(i)
         display_number_white[i] = StringVar()
-        global_label.append(Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white'))
+        global_label.append(Label(root, textvariable=display_number_white[i], bg='black', font=('arial', 12), fg='white'))
         global_label[i].grid(row=0,column=i)
 
     #button to open up options menue. For some reason it works differently on windows compared to linux....
     if platform.system() == 'Windows':
 
         exit_button_column = (len(coin_type) + 1)
-        Button(root, text='^  ', bg='black', font=('times', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
+        Button(root, text='^  ', bg='black', font=('arial', 12), bd=0, fg='white', activeforeground='black', anchor=tk.E,
                highlightbackground='red', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
                                                                                  padx=0)
 
@@ -305,7 +305,7 @@ def add_frame(bool_frame, anchor, layer):
         root.grid_columnconfigure(len(coin_type) + 1, weight=1)  # assign weight to every column so GUI spacing scales
         root.grid_rowfigure(len(coin_type) + 1, weight=1)  # assign weight to every column so GUI spacing scales
         exit_button_column = (len(coin_type) + 1)
-        Button(root, text='^', bg='black', font=('times', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
+        Button(root, text='^', bg='black', font=('arial', 12), bd=0, fg='black', activeforeground='black', anchor=tk.E,
                highlightbackground='black', command=lambda: ticker_options()).grid(row=0, column=exit_button_column,
                                                                                    padx=0)
 
