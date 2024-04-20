@@ -86,6 +86,7 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
 
 
 
+    text = str(round(float(text),2))
     if compare_list[x][0] > compare_list[x][1]:
         display_number_green[x].set(' ')
         display_number_red[x].set('')
