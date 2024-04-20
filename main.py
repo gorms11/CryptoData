@@ -343,7 +343,6 @@ def loading_message():
 
 def ticker_options():
     #buttons in the options window
-
     root2 = Tk()
     root2.grid_rowconfigure(0, weight=1)
     root2.grid_rowconfigure(1, weight=1)
