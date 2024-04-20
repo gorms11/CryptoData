@@ -34,6 +34,7 @@ def JSONDictToDF(d):
 
 '''
 global_label = [] 
+number_of_coins =  None
 
 def GetAPIUrl(cur):
     openUrl = urllib.request.urlopen(
@@ -69,6 +70,8 @@ def GetCurDF(cur, fp):
 
 def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     global global_label
+    global red_color_counter
+    global green_color_counter
     ''' Compares previous fiat values to current values and sets its associated tkinter textvariable'''
 
     print("starting thread: ", x)
@@ -85,23 +88,41 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     compare_list[x][1] = compare_list[x][0]
     compare_list[x][0] = float(text)
 
-
-
+    # Change to two decimal places
     text = "%.2f" % float(text)
-    print(text)
+
     if compare_list[x][0] > compare_list[x][1]:
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
-        global_label[x].config(fg="green")
-        root.config
+        if green_color_counter[x] == 0:
+            red_color_counter[x] = 0
+            global_label[x].config(fg="green4")
+        elif green_color_counter[x] == 1:
+            global_label[x].config(fg="green3")
+        elif green_color_counter[x] == 2:
+            global_label[x].config(fg="green2")
+        else:
+            global_label[x].config(fg="green1")
+        green_color_counter[x] += 1
     elif compare_list[x][0] < compare_list[x][1]:
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
-        global_label[x].config(fg="red")
+        if red_color_counter[x] == 0:
+            green_color_counter[x] = 0 
+            global_label[x].config(fg="red4")
+        elif red_color_counter[x] == 1:
+            global_label[x].config(fg="red3")
+        elif red_color_counter[x] == 2:
+            global_label[x].config(fg="red2")
+        else:
+            global_label[x].config(fg="red")
+        red_color_counter[x] += 1
     else:
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
         global_label[x].config(fg="white")
+        red_color_counter[x] = 0
+        green_color_counter[x] = 0
 
 
 
@@ -457,6 +478,9 @@ with open('coins.config', "r") as ins:
     for line in ins:
         coin_type.append(line[0:((len(line)) - 1)])
 
+
+red_color_counter = [0]*len(coin_type)
+green_color_counter = [0]*len(coin_type)
 
 # 2D array for comparing current value to previous value for each coin
 compare_list = [[float(0.0) for x in range(2)] for y in range(len(coin_type))]
