@@ -93,6 +93,7 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
         global_label[x].config(fg="green")
+        root.config
     elif compare_list[x][0] < compare_list[x][1]:
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
@@ -327,12 +328,15 @@ def add_frame(bool_frame, anchor, layer):
 
 
 #here we make all the necessary columns for all 3 colors
+    global global_label
+    global_label = []
     for i in range(len(coin_type)):
         root.grid_columnconfigure(i, weight=1) #assign weight to every column so GUI spacing scales
         display_number_white.append(i)
         display_number_white[i] = StringVar()
-        global global_label
         global_label.append(Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white'))
+        #Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white')
+        #labels[i] = Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white')
         global_label[i].grid(row=0,column=i)
 
     #for i in range(len(coin_type)):
