@@ -33,7 +33,7 @@ def JSONDictToDF(d):
 	return df
 
 '''
-
+global_label = [] 
 
 def GetAPIUrl(cur):
     openUrl = urllib.request.urlopen(
@@ -68,6 +68,7 @@ def GetCurDF(cur, fp):
 
 
 def compare_and_set_display(json_web_data, x, dbwrite1, cur):
+    global global_label
     ''' Compares previous fiat values to current values and sets its associated tkinter textvariable'''
 
     print("starting thread: ", x)
@@ -86,26 +87,21 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
 
 
 
-    text = str(round(float(text),2))
+    text = "%.2f" % float(text)
+    print(text)
     if compare_list[x][0] > compare_list[x][1]:
-        display_number_green[x].set(' ')
-        display_number_red[x].set('')
-        display_number_white[x].set('    ')
-        display_number_green[x].set('    ' + cur + ' : $' + text)
-
-    elif compare_list[x][0] < compare_list[x][1]:
-
-        display_number_green[x].set(' ')
-        display_number_red[x].set('')
-        display_number_white[x].set(' ')
-        display_number_red[x].set('   ' + cur + ' : $' + text)
-
-    else:
-
-        display_number_green[x].set(' ')
-        display_number_red[x].set('')
         display_number_white[x].set('   ')
         display_number_white[x].set('    ' + cur + ' : $' + text)
+        global_label[x].config(fg="green")
+    elif compare_list[x][0] < compare_list[x][1]:
+        display_number_white[x].set('   ')
+        display_number_white[x].set('    ' + cur + ' : $' + text)
+        global_label[x].config(fg="red")
+    else:
+        display_number_white[x].set('   ')
+        display_number_white[x].set('    ' + cur + ' : $' + text)
+        global_label[x].config(fg="white")
+
 
 
 
@@ -289,7 +285,7 @@ def add_frame(bool_frame, anchor, layer):
         if platform.system() == 'Windows':
             root.wm_attributes('-topmost', layer)
             root.overrideredirect(1)
-            root.geometry('1920x25+0+1020')
+            root.geometry('1920x25+0+1015') # Was 1020
 
 
 
@@ -331,28 +327,23 @@ def add_frame(bool_frame, anchor, layer):
 
 
 #here we make all the necessary columns for all 3 colors
-
     for i in range(len(coin_type)):
         root.grid_columnconfigure(i, weight=1) #assign weight to every column so GUI spacing scales
         display_number_white.append(i)
         display_number_white[i] = StringVar()
-        Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white').grid(row=0,
-                                                                                                           column=i,
-                                                                                                           padx=padding)
+        global global_label
+        global_label.append(Label(root, textvariable=display_number_white[i], bg='black', font=('times', 12), fg='white'))
+        global_label[i].grid(row=0,column=i)
 
+    #for i in range(len(coin_type)):
+    #    display_number_green.append(i)
+    #    display_number_green[i] = StringVar()
+    #    Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0,column=i)
 
-    for i in range(len(coin_type)):
-        display_number_green.append(i)
-        display_number_green[i] = StringVar()
-        Label(root, textvariable=display_number_green[i], bg='black', font=('times', 12), fg='green').grid(row=0,
-                                                                                                           column=i,
-                                                                                                           padx=padding)
-
-    for i in range(len(coin_type)):
-        display_number_red.append(i)
-        display_number_red[i] = StringVar()
-        Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i,
-                                                                                                       padx=padding)
+    #for i in range(len(coin_type)):
+    #    display_number_red.append(i)
+    #    display_number_red[i] = StringVar()
+    #    Label(root, textvariable=display_number_red[i], bg='black', font=('times', 12), fg='red').grid(row=0, column=i)
 
 
 
