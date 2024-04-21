@@ -15,7 +15,6 @@ import sys
 from threading import Lock
 
 # TODO: Add option in menu to turn on or off database logging.
-# TODO:
 
 def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     '''
@@ -24,6 +23,7 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
     global global_label
     global red_color_counter
     global green_color_counter
+    print(json_web_data)
 
     try: #potential exceptions if an invalid dictionary is passed into this method
         text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
@@ -348,6 +348,7 @@ with open('coins.config', "r") as ins:
     coin_type = []
     for line in ins:
         coin_type.append(line[0:((len(line)) - 1)])
+    coin_type.sort() # Alphabetical Order
 
 # Init counters for price colors
 red_color_counter = [0]*len(coin_type)
@@ -365,4 +366,4 @@ thread = threading.Thread(target=reduced_API_latency_loop, args=(start,))
 thread.start()
 
 #starts the GUI method
-add_frame(toggle_frame, 2, 0)
+add_frame(toggle_frame, 0, 0)
