@@ -55,11 +55,6 @@ def compare_and_set_display(text, x, dbwrite1, cur):
         else:
             global_label[x].config(fg="red1")
         red_color_counter[x] += 1
-    else:
-        display_price_text[x].set(cur + ' : $' + text)
-        global_label[x].config(fg="white")
-        red_color_counter[x] = 0
-        green_color_counter[x] = 0
 
     #if dbwrite1 is True:
     #    thread_database = threading.Thread(target=WriteToDB, args=(json_web_data, cur))
