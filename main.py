@@ -16,20 +16,13 @@ from threading import Lock
 
 # TODO: Add option in menu to turn on or off database logging.
 
-def compare_and_set_display(json_web_data, x, dbwrite1, cur):
+def compare_and_set_display(text, x, dbwrite1, cur):
     '''
     This function compares current price to past price to set the font color of price. It also writes the data out to database.
     '''
     global global_label
     global red_color_counter
     global green_color_counter
-    print(json_web_data)
-
-    try: #potential exceptions if an invalid dictionary is passed into this method
-        text = str(json_web_data['RAW'][cur]['USD']['PRICE'])
-    except KeyError or Exception:
-        print("bad data, check internet connection")
-        return
    
     mutex.acquire()
     compare_list[x][1] = compare_list[x][0]
@@ -68,9 +61,9 @@ def compare_and_set_display(json_web_data, x, dbwrite1, cur):
         red_color_counter[x] = 0
         green_color_counter[x] = 0
 
-    if dbwrite1 is True:
-        thread_database = threading.Thread(target=WriteToDB, args=(json_web_data, cur))
-        thread_database.start()
+    #if dbwrite1 is True:
+    #    thread_database = threading.Thread(target=WriteToDB, args=(json_web_data, cur))
+    #    thread_database.start()
 
     mutex.release()
 
@@ -142,18 +135,32 @@ def reduced_API_latency_loop(start_time):
         list_of_coin_data = []
 
         try:
+            Urlcoin = ""
             for coin in coin_type:
-                openUrl = urllib.request.urlopen(
-                    'https://min-api.cryptocompare.com/data/pricemultifull?fsyms=' + coin + '&tsyms=USD')
+                if coin == "ETH":
+                    openUrl = urllib.request.urlopen(
+                        'https://api.kraken.com/0/public/Ticker?pair=XETHZUSD')
+                    urlcoin = "XETHZUSD"
+                elif coin == "BTC":
+                    openUrl = urllib.request.urlopen(
+                        'https://api.kraken.com/0/public/Ticker?pair=WBTCUSD')
+                    urlcoin = "WBTCUSD"
+                elif coin == "SOL":
+                    openUrl = urllib.request.urlopen(
+                        'https://api.kraken.com/0/public/Ticker?pair=SOLUSD')
+                    urlcoin = "SOLUSD"
+                    
                 web_data = openUrl.read()
                 openUrl.close()
+
                 text = json.loads(web_data)
-                list_of_coin_data.append(text)
+                print(text)
+                price_text = text['result'][urlcoin]['c'][0]
+                list_of_coin_data.append(price_text)
                 if bool_end is False:
                     sys.exit(0)
-                sleep(.2)  # delay to not overload the API with requests
+                sleep(1)  # delay to not overload the API with requests
         except URLError as e: #error handling for network connectivity issues
-
             if hasattr(e, 'reason'):
                 print('failed to reach API, check internet connection.')
                 print('Reason: ', e.reason)
