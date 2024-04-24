@@ -138,8 +138,8 @@ def reduced_API_latency_loop(start_time):
                     urlcoin = "XETHZUSD"
                 elif coin == "BTC":
                     openUrl = urllib.request.urlopen(
-                        'https://api.kraken.com/0/public/Ticker?pair=WBTCUSD')
-                    urlcoin = "WBTCUSD"
+                        'https://api.kraken.com/0/public/Ticker?pair=XBTUSD')
+                    urlcoin = "XXBTZUSD"
                 elif coin == "SOL":
                     openUrl = urllib.request.urlopen(
                         'https://api.kraken.com/0/public/Ticker?pair=SOLUSD')
