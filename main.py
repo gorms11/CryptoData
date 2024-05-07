@@ -29,7 +29,10 @@ def compare_and_set_display(text, x, dbwrite1, cur):
     compare_list[x][0] = float(text)
 
     # Change to two decimal places
-    text = "%.2f" % float(text)
+    if cur == "ADA":
+        text = "%.6f" % float(text)
+    else:
+        text = "%.2f" % float(text)
 
     if compare_list[x][0] > compare_list[x][1]:
         display_price_text[x].set(cur + ' : $' + text)
